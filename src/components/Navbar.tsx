@@ -22,11 +22,9 @@ const Navbar = ({ user }: NavbarProps) => {
     return (
         <header className="navbar"> 
             <nav>
-                <Link href="/" className="flex items-center gap-2.5">
-                    <Image src="/assets/icons/logo.svg" alt="Logo" width={32} height={32}/>
-                    <h1 className="text-xl font-black text-blue-100 font-satoshi -tracking-[0.1px]">SnapCast</h1>
+                <Link href="/home" className="text-3xl font-bold mr-8 text-black ml-1">
+                    Sophia<span className="text-blue-600">.</span>
                 </Link>
-
                 {user ? (
                     <figure>
                         <DropdownMenu>
