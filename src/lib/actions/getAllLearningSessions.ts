@@ -31,10 +31,12 @@ export async function getAllLearningSessions(createdAfter: string = '2025-08-11 
       .select(`
         id,
         profile_id,
+        lesson_id,
         status,
         started_at,
         completed_at,
         lessons (
+          id,
           title
         )
       `)
@@ -73,17 +75,21 @@ export async function getAllLearningSessions(createdAfter: string = '2025-08-11 
     const transformedData = sessionsData?.map(session => {
       // Handle the lessons data safely
       let lessonTitle = 'Unknown Lesson'
+      let lessonId = session.lesson_id
       if (session.lessons) {
         if (Array.isArray(session.lessons)) {
           lessonTitle = session.lessons[0]?.title || 'Unknown Lesson'
+          lessonId = session.lessons[0]?.id || session.lesson_id
         } else {
           lessonTitle = (session.lessons as any).title || 'Unknown Lesson'
+          lessonId = (session.lessons as any).id || session.lesson_id
         }
       }
 
       return {
         profileId: session.profile_id,
         sessionId: session.id,
+        lessonId: lessonId,
         status: session.status,
         started_at: session.started_at,
         completed_at: session.completed_at,
