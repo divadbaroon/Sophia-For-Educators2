@@ -8,9 +8,10 @@ interface SharedHeaderProps {
   title: string
   userImg?: string
   onFiltersChange?: (filters: any) => void
+  availableLessons?: string[]  
 }
 
-const Header = ({ subHeader, title, userImg, onFiltersChange }: SharedHeaderProps) => {
+const Header = ({ subHeader, title, userImg, onFiltersChange, availableLessons }: SharedHeaderProps) => {
   return (
     <header className="header">
         <section className="header-container">
@@ -41,7 +42,7 @@ const Header = ({ subHeader, title, userImg, onFiltersChange }: SharedHeaderProp
                 width={16} height={16} />
             </div>
 
-            <DropdownList onFiltersChange={onFiltersChange} />
+            <DropdownList onFiltersChange={onFiltersChange} availableLessons={availableLessons} />
         </section>
     </header>
   )
