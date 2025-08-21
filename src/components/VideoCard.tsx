@@ -20,6 +20,7 @@ interface VideoCardProps {
     // New learning session props
     profileId?: string
     sessionId?: string
+    lessonId?: string  
     status?: string
     started_at?: string
     completed_at?: string
@@ -42,6 +43,7 @@ const VideoCard = ({
     // New learning session props
     profileId,
     sessionId,
+    lessonId,  
     status,
     started_at,
     completed_at,
@@ -65,7 +67,7 @@ const VideoCard = ({
     const sessionDuration = calculateDuration()
 
     return (
-        <Link href={`/video/${id || sessionId}`} className="video-card">
+        <Link href={`/replay/concept/${lessonId}/session/${sessionId || id}`} className="video-card">
             <Image src={thumbnail || '/assets/images/placeholder-thumbnail.jpg'} alt="thumbnail" width={290} height={160}
             className="thumbnail" />
             <article>
