@@ -24,24 +24,6 @@ const Header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
                     </h1>
                 </article>
             </div>
-
-            <aside>
-                <Link href="/upload">
-                    <Image src="/assets/icons/upload.svg" 
-                    alt="upload" width={16} height={16} />
-                    <span>
-                        Upload a video  
-                    </span>
-                </Link>
-                <div className="record">
-                    <button className="primary-btn">
-                        <Image src={ICONS.record} alt="record" width={16} height={16}></Image>
-                        <span>
-                            Record a video
-                        </span>
-                    </button>
-                </div>
-            </aside>
         </section>
 
         <section className="search-filter">
