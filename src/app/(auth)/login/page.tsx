@@ -27,11 +27,11 @@ export default async function Login({
   const message = resolvedParams.message as string | undefined
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+    <div className="min-h-screen bg-radial-100 relative">
       {/* geometric shapes */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-10 rounded-full blur-3xl"></div>
       </div>
       
       {/* Login Section */}
@@ -39,12 +39,12 @@ export default async function Login({
         <div className="w-full max-w-md">
           <Card className="border border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm">
             <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-900">Sign In</CardTitle>
+              <CardTitle className="text-2xl font-bold text-blue-100">Sign In</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
               <form id="login-form" className="grid gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-gray-700 font-medium">
+                  <Label htmlFor="email" className="text-gray-100 font-medium">
                     Email
                   </Label>
                   <Input
@@ -52,16 +52,16 @@ export default async function Login({
                     name="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-white/80 backdrop-blur-sm"
+                    className="h-12 border-gray-20 focus:border-pink-100 focus:ring-pink-100/20 rounded-lg bg-white/80 backdrop-blur-sm"
                     required
                   />
                 </div>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-gray-700 font-medium">
+                    <Label htmlFor="password" className="text-gray-100 font-medium">
                       Password
                     </Label>
-                    <a href="#" className="text-sm text-blue-600 hover:text-blue-700 transition-colors">
+                    <a href="#" className="text-sm text-pink-100 hover:text-pink-200 transition-colors">
                       Forgot password?
                     </a>
                   </div>
@@ -71,18 +71,18 @@ export default async function Login({
                     id="password"
                     type="password"
                     placeholder="Enter your password"
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-white/80 backdrop-blur-sm"
+                    className="h-12 border-gray-20 focus:border-pink-100 focus:ring-pink-100/20 rounded-lg bg-white/80 backdrop-blur-sm"
                     required
                   />
                 </div>
                 {message && (
-                  <div className="text-sm font-medium text-red-600 bg-red-50/80 p-3 rounded-lg border border-red-200 backdrop-blur-sm">
+                  <div className="text-sm font-medium text-orange-100 bg-pink-10 p-3 rounded-lg border border-gray-20 backdrop-blur-sm">
                     {message}
                   </div>
                 )}
                 <Button
                   formAction={login}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
+                  className="w-full h-12 bg-pink-100 hover:brightness-90 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                 >
                   Sign In
                 </Button>
@@ -90,19 +90,19 @@ export default async function Login({
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-gray-20" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white/95 px-2 text-gray-500">Or</span>
+                  <span className="bg-white/95 px-2 text-gray-100">Or</span>
                 </div>
               </div>
 
               <div className="text-center">
-                <span className="text-gray-600">Don&apos;t have an account? </span>
+                <span className="text-gray-100">Don&apos;t have an account? </span>
                 <button
                   formAction={signup}
                   form="login-form"
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200 hover:underline"
+                  className="text-pink-100 hover:text-pink-200 font-semibold transition-colors duration-200 hover:underline"
                 >
                   Create account
                 </button>
@@ -112,13 +112,13 @@ export default async function Login({
 
           {/* Footer text */}
           <div className="text-center mt-8">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-100">
               By signing in, you agree to our{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors">
+              <a href="#" className="text-pink-100 hover:text-pink-200 transition-colors">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors">
+              <a href="#" className="text-pink-100 hover:text-pink-200 transition-colors">
                 Privacy Policy
               </a>
             </p>
