@@ -1,9 +1,9 @@
 "use client"
 
 import React from 'react'
-
 import Image from 'next/image'
 import Link from 'next/link'
+import { MessageCircleCode } from 'lucide-react'
 
 interface VideoCardProps {
     // Original video props (now optional)
@@ -79,7 +79,7 @@ const VideoCard = ({
                         </figcaption>
                     </figure>
                     <aside>
-                        <Image src="/assets/icons/eye.svg" alt="messages" width={16} height={16}/>
+                        <MessageCircleCode size={16} className="text-gray-600" />
                         <span>{messageCount || views || 0}</span>
                     </aside>
                 </div>
