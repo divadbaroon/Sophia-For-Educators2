@@ -25,7 +25,7 @@ const SingleDropdown = ({ label, options, selectedValue, onValueChange, placehol
                 <div className="filter-trigger">
                     <figure>
                         <Image src="/assets/icons/hamburger.svg" alt="menu" width={14} height={14} />
-                        {selectedValue || placeholder || label}
+                        {selectedValue === 'All' ? label : selectedValue}
                     </figure>
                     <Image src="/assets/icons/arrow-down.svg" alt="arrow-down" width={20} height={20} />
                 </div>

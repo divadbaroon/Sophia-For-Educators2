@@ -6,7 +6,9 @@ import SingleDropdown  from "./SingleDropDownLists"
 
 interface MultipleFiltersProps {
     onFiltersChange?: (filters: FilterState) => void
+    availableLessons?: string[] 
 }
+
 
 interface FilterState {
     sortBy: string
@@ -15,7 +17,7 @@ interface FilterState {
     lessonSort: string
 }
 
-const MultipleFilters = ({ onFiltersChange }: MultipleFiltersProps) => {
+const MultipleFilters = ({ onFiltersChange, availableLessons }: MultipleFiltersProps) => {
     const [filters, setFilters] = useState<FilterState>({
         sortBy: 'Date',
         messageFilter: 'Messages', 
@@ -32,7 +34,7 @@ const MultipleFilters = ({ onFiltersChange }: MultipleFiltersProps) => {
     const sortOptions = ['Most recent', 'Oldest', 'Most recently completed']
     const messageOptions = ['All', 'Has messages', 'No messages']
     const durationOptions = ['All', 'Longest duration', 'Shortest duration']
-    const lessonOptions = ['Default', 'A-Z', 'Z-A']
+    const lessonOptions = availableLessons || ['Lesson', 'Binary Search Trees', 'Hash Tables', 'Graph Algorithms']
 
     return (
         <div className="flex gap-4 items-center">
