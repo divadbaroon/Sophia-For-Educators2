@@ -25,6 +25,8 @@ const Page = () => {
     lessonSort: 'Lesson'
   })
 
+  const uniqueLessons = ['Lesson', ...Array.from(new Set(sessionsData.map(session => session.lesson).filter(Boolean)))]
+
   // Fetch data on component mount
   useEffect(() => {
     const fetchSessions = async () => {
@@ -74,10 +76,8 @@ const Page = () => {
     }
 
     // Apply lesson sorting
-    if (filters.lessonSort === 'A-Z') {
-      filtered.sort((a, b) => (a.lesson || '').localeCompare(b.lesson || ''))
-    } else if (filters.lessonSort === 'Z-A') {
-      filtered.sort((a, b) => (b.lesson || '').localeCompare(a.lesson || ''))
+    if (filters.lessonSort !== 'Lesson' && filters.lessonSort !== 'All') {
+      filtered = filtered.filter(session => session.lesson === filters.lessonSort)
     }
 
     // Apply date sorting (this should be last to override other sorts if needed)
@@ -111,7 +111,12 @@ const Page = () => {
   if (loading) {
     return (
       <main className="wrapper page">
-        <Header title="All Learning Sessions" subHeader="Public Library" onFiltersChange={handleFiltersChange} />
+        <Header 
+          title="All Learning Sessions" 
+          subHeader="Public Library" 
+          onFiltersChange={handleFiltersChange}
+          availableLessons={uniqueLessons}
+        />
         <div className="text-center py-8">Loading sessions...</div>
       </main>
     )
@@ -119,7 +124,12 @@ const Page = () => {
 
   return (
     <main className="wrapper page">
-      <Header title="All Learning Sessions" subHeader="Public Library" onFiltersChange={handleFiltersChange} />
+        <Header 
+          title="All Learning Sessions" 
+          subHeader="Public Library" 
+          onFiltersChange={handleFiltersChange}
+          availableLessons={uniqueLessons}
+        />
 
       <section className="video-grid">
         {cardsToDisplay.length > 0 ? (
