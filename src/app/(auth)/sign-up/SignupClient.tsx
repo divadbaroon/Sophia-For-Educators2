@@ -117,11 +117,11 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
 
   if (showVerificationModal) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+      <div className="min-h-screen bg-radial-100 relative">
         {/* geometric shapes */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-10 rounded-full blur-3xl"></div>
         </div>
 
         {/* Verification Modal */}
@@ -129,26 +129,26 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
           <div className="w-full max-w-md">
             <Card className="border border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm">
               <CardHeader className="text-center pb-6">
-                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <Mail className="w-8 h-8 text-blue-600" />
+                <div className="mx-auto w-16 h-16 bg-pink-10 rounded-full flex items-center justify-center mb-4">
+                  <Mail className="w-8 h-8 text-pink-100" />
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-900">Check Your Email</CardTitle>
+                <CardTitle className="text-2xl font-bold text-blue-100">Check Your Email</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-6 text-center">
                 <div className="space-y-3">
-                  <p className="text-gray-600">
+                  <p className="text-gray-100">
                     We&apos;ve sent a verification link to:
                   </p>
-                  <p className="font-semibold text-gray-900 bg-gray-50 px-4 py-2 rounded-lg">
+                  <p className="font-semibold text-dark-100 bg-pink-10 px-4 py-2 rounded-lg">
                     {userEmail}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-100">
                     Click the link in the email to verify your account and complete your registration.
                   </p>
                 </div>
 
                 {message && (
-                  <div className="text-sm font-medium text-green-600 bg-green-50/80 p-3 rounded-lg border border-green-200 backdrop-blur-sm">
+                  <div className="text-sm font-medium text-dark-100 bg-pink-10 p-3 rounded-lg border border-gray-20 backdrop-blur-sm">
                     {message}
                   </div>
                 )}
@@ -157,7 +157,7 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                   <Button
                     onClick={resendVerificationEmail}
                     variant="outline"
-                    className="w-full h-12 border-blue-200 text-blue-600 hover:bg-blue-50"
+                    className="w-full h-12 border-gray-20 text-pink-100 hover:bg-pink-10"
                   >
                     Resend Verification Email
                   </Button>
@@ -168,14 +168,14 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                       setMessage("")
                     }}
                     variant="ghost"
-                    className="w-full h-12 text-gray-600 hover:text-gray-800"
+                    className="w-full h-12 text-gray-100 hover:text-dark-100"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back to Sign Up
                   </Button>
                 </div>
 
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-100">
                   <p>Didn&apos;t receive the email? Check your spam folder or try resending.</p>
                 </div>
               </CardContent>
@@ -187,11 +187,11 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+    <div className="min-h-screen bg-radial-100 relative">
       {/* geometric shapes */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-pink-10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-10 rounded-full blur-3xl"></div>
       </div>
 
       {/* Sign Up Section */}
@@ -199,7 +199,7 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
         <div className="w-full max-w-md mt-12">
           <Card className="border border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm">
             <CardHeader className="text-center pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-900">Create Account</CardTitle>
+              <CardTitle className="text-2xl font-bold text-blue-100">Create Account</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-6">
               <form 
@@ -212,7 +212,7 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                 }}
               >
                 <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-gray-700 font-medium">
+                  <Label htmlFor="email" className="text-gray-100 font-medium">
                     Email
                   </Label>
                   <Input
@@ -220,16 +220,16 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                     name="email"
                     type="email"
                     placeholder="Enter your email address"
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-white/80 backdrop-blur-sm"
+                    className="h-12 border-gray-20 focus:border-pink-100 focus:ring-pink-100/20 rounded-lg bg-white/80 backdrop-blur-sm"
                     required
                   />
                 </div>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-gray-700 font-medium">
+                    <Label htmlFor="password" className="text-gray-100 font-medium">
                       Password
                     </Label>
-                    <span className="text-xs text-gray-500 bg-gray-50/80 px-2 py-1 rounded backdrop-blur-sm">Min. 6 characters</span>
+                    <span className="text-xs text-gray-100 px-2 py-1">Min. 6 characters</span>
                   </div>
                   <Input
                     minLength={6}
@@ -237,12 +237,12 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                     id="password"
                     type="password"
                     placeholder="Create a strong password"
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-white/80 backdrop-blur-sm"
+                    className="h-12 border-gray-20 focus:border-pink-100 focus:ring-pink-100/20 rounded-lg bg-white/80 backdrop-blur-sm"
                     required
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                  <Label htmlFor="confirmPassword" className="text-gray-100 font-medium">
                     Confirm Password
                   </Label>
                   <Input
@@ -251,19 +251,19 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                     id="confirmPassword"
                     type="password"
                     placeholder="Confirm your password"
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg bg-white/80 backdrop-blur-sm"
+                    className="h-12 border-gray-20 focus:border-pink-100 focus:ring-pink-100/20 rounded-lg bg-white/80 backdrop-blur-sm"
                     required
                   />
                 </div>
                 {message && (
-                  <div className="text-sm font-medium text-red-600 bg-red-50/80 p-3 rounded-lg border border-red-200 backdrop-blur-sm">
+                  <div className="text-sm font-medium text-orange-100 bg-pink-10 p-3 rounded-lg border border-gray-20 backdrop-blur-sm">
                     {message}
                   </div>
                 )}
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 bg-pink-100 hover:brightness-90 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <>
@@ -278,15 +278,15 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                  <span className="w-full border-t border-gray-20" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white/95 px-2 text-gray-500">Or</span>
+                  <span className="bg-white/95 px-2 text-gray-100">Or</span>
                 </div>
               </div>
 
               <div className="text-center">
-                <span className="text-gray-600">Already have an account? </span>
+                <span className="text-gray-100">Already have an account? </span>
                 <button
                   onClick={(e) => {
                     e.preventDefault()
@@ -295,7 +295,7 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
                     handleLogin(formData)
                   }}
                   disabled={isLoading}
-                  className="text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200 hover:underline disabled:opacity-50"
+                  className="text-pink-100 hover:text-pink-200 font-semibold transition-colors duration-200 hover:underline disabled:opacity-50"
                 >
                   Sign in
                 </button>
@@ -305,13 +305,13 @@ export default function SignupClient({ initialMessage }: { initialMessage?: stri
 
           {/* Footer text */}
           <div className="text-center mt-8">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-100">
               By creating an account, you agree to our{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors">
+              <a href="#" className="text-pink-100 hover:text-pink-200 transition-colors">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors">
+              <a href="#" className="text-pink-100 hover:text-pink-200 transition-colors">
                 Privacy Policy
               </a>
             </p>
