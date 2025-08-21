@@ -89,10 +89,6 @@ const VideoCard = ({
                     day: 'numeric'
                 })}</h2>
             </article>
-            <button onClick={() => {}} className="copy-btn">
-                <Image src="/assets/icons/link.svg" alt="copy" width={18}
-                height={18} />
-            </button>
             {sessionDuration && (
                 <div className="duration">
                     {sessionDuration}min
