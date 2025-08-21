@@ -3,35 +3,77 @@
 import React from 'react'
 import Link from "next/link"
 import Image from "next/image"
-import {useRouter} from "next/navigation"
+import { useRouter } from "next/navigation"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { signOut } from "@/app/(auth)/login/actions"
 
-const user = {};
+interface User {
+  email?: string
+  id: string
+  name?: string
+}
 
-const Navbar = () => {
-    const router = useRouter()
+interface NavbarProps {
+  user: User | null
+}
+
+const Navbar = ({ user }: NavbarProps) => {    
     return (
-    <header className="navbar"> 
-        <nav>
-            <Link href="/">
-                <Image src="/assets/icons/logo.svg" alt="Logo" width={32} height={32}/>
-                <h1>SnapCast</h1>
-            </Link>
+        <header className="navbar"> 
+            <nav>
+                <Link href="/" className="flex items-center gap-2.5">
+                    <Image src="/assets/icons/logo.svg" alt="Logo" width={32} height={32}/>
+                    <h1 className="text-xl font-black text-blue-100 font-satoshi -tracking-[0.1px]">SnapCast</h1>
+                </Link>
 
-            {user && (
-                <figure>
-                    <button onClick={() =>  router.push('/profile/123456')}>
-                        <Image src="/assets/images/dummy.jpg" 
-                        alt="User" width={36} height={36} className="rounded-full aspect-square"/>
-                    </button>
-                    <button className="cursor-pointer">
-                        <Image src="/assets/icons/logout.svg" 
-                        alt="logout" width={24} height={24} className="rotate-180"/>
-                    </button>
-                </figure>
-            )}
-
-        </nav>
-    </header>
+                {user ? (
+                    <figure>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="cursor-pointer">
+                                    <Image 
+                                        src="/assets/icons/accountIcon.png" 
+                                        alt="User" 
+                                        width={36} 
+                                        height={36} 
+                                        className="rounded-full aspect-square"
+                                    />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuItem className="flex items-center gap-2">
+                                    <div className="flex flex-col">
+                                        <p className="text-sm font-medium leading-none">
+                                            {user.email ? user.email : "Guest Account"}
+                                        </p>
+                                    </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <form action="/" method="POST" className="w-full">
+                                        <button className="w-full text-left" formAction={signOut}>
+                                            Sign Out
+                                        </button>
+                                    </form>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </figure>
+                ) : (
+                    <div className="flex items-center space-x-4">
+                        <Button variant="ghost" asChild className="text-dark-100 hover:scale-105 transition-transform duration-200">
+                            <Link href="/login">Sign In</Link>
+                        </Button>
+                        <Link
+                            href="/sign-up"
+                            className="bg-pink-100 text-white px-6 py-2 rounded-4xl hover:bg-pink-100/80 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm"
+                        >
+                            Get Started
+                        </Link>
+                    </div>
+                )}
+            </nav>
+        </header>
     )
 }
 
