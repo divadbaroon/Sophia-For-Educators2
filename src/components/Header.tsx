@@ -3,7 +3,14 @@ import Image from 'next/image'
 
 import DropdownList from './MultipleDropdownLists'
 
-const Header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
+interface SharedHeaderProps {
+  subHeader: string
+  title: string
+  userImg?: string
+  onFiltersChange?: (filters: any) => void
+}
+
+const Header = ({ subHeader, title, userImg, onFiltersChange }: SharedHeaderProps) => {
   return (
     <header className="header">
         <section className="header-container">
@@ -34,7 +41,7 @@ const Header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
                 width={16} height={16} />
             </div>
 
-            <DropdownList />
+            <DropdownList onFiltersChange={onFiltersChange} />
         </section>
     </header>
   )
