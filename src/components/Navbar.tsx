@@ -22,7 +22,7 @@ const Navbar = ({ user }: NavbarProps) => {
     return (
         <header className="navbar"> 
             <nav>
-                <Link href="/home" className="text-3xl font-bold mr-8 text-black ml-1">
+                <Link href="/" className="text-3xl font-bold mr-8 text-black ml-1">
                     Sophia<span className="text-blue-600">.</span>
                 </Link>
                 {user ? (
