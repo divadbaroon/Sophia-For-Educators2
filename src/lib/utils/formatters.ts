@@ -14,15 +14,29 @@ export const formatTimestamp = (timestamp: string, sessionStart: string) => {
     return "00:00"
   }
   
-  const minutes = Math.floor(diffMs / 60000)
-  const seconds = Math.floor((diffMs % 60000) / 1000)
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  const totalSeconds = Math.floor(diffMs / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  } else {
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }
 }
 
 export const formatDuration = (durationMs: number) => {
-  const minutes = Math.floor(durationMs / 60000)
-  const seconds = Math.floor((durationMs % 60000) / 1000)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  const totalSeconds = Math.floor(durationMs / 1000)
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  } else {
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
 }
 
 export const formatConceptTitle = (slug: string) => {
