@@ -1,7 +1,13 @@
 import React from 'react'
 import { TabsContent } from "@/components/ui/tabs"
 import { formatTimestamp } from '@/lib/utils/formatters'
-import { ActivityEvent } from '@/types'
+
+interface ActivityEvent {
+  timestamp: string
+  type: string
+  description: string
+  details?: string
+}
 
 interface ActivityTabProps {
   navigationEvents: any[]
@@ -20,6 +26,15 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
   strokeData,
   sessionStartTime 
 }) => {
+  const handleTimestampClick = (timestamp: string, rawTimestamp: string, activityType: string) => {
+    console.log('Activity timestamp clicked:', {
+      formatted: timestamp,
+      raw: rawTimestamp,
+      activityType,
+      sessionStart: sessionStartTime
+    })
+  }
+
   const activityEvents: ActivityEvent[] = [
     ...navigationEvents.map(event => ({
       timestamp: event.timestamp,
@@ -59,21 +74,28 @@ export const ActivityTab: React.FC<ActivityTabProps> = ({
     <TabsContent value="activity" className="mt-4 space-y-4 max-h-96 overflow-y-auto">
       <div className="space-y-3 text-sm">
         {activityEvents.length > 0 ? (
-          activityEvents.map((activity, index) => (
-            <div key={index}>
-              <span className="text-pink-500 font-medium">
-                [{formatTimestamp(activity.timestamp, sessionStartTime)}]
-              </span>
-              <span className="text-gray-600 ml-2">
-                {activity.description}
-              </span>
-              {activity.details && (
-                <div className="text-xs text-gray-500 ml-8 mt-1">
-                  {activity.details}
-                </div>
-              )}
-            </div>
-          ))
+          activityEvents.map((activity, index) => {
+            const formattedTime = formatTimestamp(activity.timestamp, sessionStartTime)
+            return (
+              <div key={index}>
+                <span 
+                  className="text-pink-500 font-medium cursor-pointer hover:text-pink-700 hover:underline"
+                  onClick={() => handleTimestampClick(formattedTime, activity.timestamp, activity.type)}
+                  title="Click to log timestamp info"
+                >
+                  [{formattedTime}]
+                </span>
+                <span className="text-gray-600 ml-2">
+                  {activity.description}
+                </span>
+                {activity.details && (
+                  <div className="text-xs text-gray-500 ml-8 mt-1">
+                    {activity.details}
+                  </div>
+                )}
+              </div>
+            )
+          })
         ) : (
           <p className="text-gray-500">No activity events found for this session.</p>
         )}
