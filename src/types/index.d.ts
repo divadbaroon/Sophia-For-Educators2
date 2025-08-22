@@ -129,3 +129,24 @@ export interface VideoCardProps {
     lesson?: string
     messageCount?: number
 }
+
+export interface VideoDetailsPageProps {
+  params: Promise<{
+    conceptId: string
+    sessionId: string
+  }>
+}
+
+export interface ActivityEvent {
+  timestamp: string
+  type: string
+  description: string
+  details?: string
+}
+
+export interface CodeEvent {
+  timestamp: string
+  type: string
+  description: string
+  details?: string
+}
