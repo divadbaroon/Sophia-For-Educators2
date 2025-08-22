@@ -5,28 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MessageCircleCode } from 'lucide-react'
 
-interface VideoCardProps {
-    // Original video props (now optional)
-    id?: string
-    title?: string
-    thumbnail?: string
-    userImg?: string
-    username?: string
-    createdAt?: Date
-    views?: number
-    visibility?: string
-    duration?: number
-    
-    // New learning session props
-    profileId?: string
-    sessionId?: string
-    lessonId?: string  
-    status?: string
-    started_at?: string
-    completed_at?: string
-    lesson?: string
-    messageCount?: number
-}
+import { VideoCardProps } from "@/types"
 
 const VideoCard = ({
     // Original props
@@ -64,10 +43,18 @@ const VideoCard = ({
         return null
     }
 
+    // Format lesson name for URL (spaces to dashes, lowercase)
+    const formatLessonForUrl = (lessonName: string) => {
+        return lessonName.toLowerCase().replace(/\s+/g, '-')
+    }
+
     const sessionDuration = calculateDuration()
 
     return (
-        <Link href={`/replay/concept/${lessonId}/session/${sessionId || id}`} className="video-card">
+        <Link 
+            href={`/replay/concept/${lesson ? formatLessonForUrl(lesson) : lessonId}/session/${sessionId || id}`} 
+            className="video-card"
+        >
             <Image src={thumbnail || '/assets/images/placeholder-thumbnail.jpg'} alt="thumbnail" width={290} height={160}
             className="thumbnail" />
             <article>
@@ -85,11 +72,21 @@ const VideoCard = ({
                         <span>{messageCount || views || 0}</span>
                     </aside>
                 </div>
-                <h2>{title || lesson} - {" "} {(createdAt || (started_at ? new Date(started_at) : new Date())).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                })}</h2>
+                <h2>
+                    {title || lesson} - {" "}
+                    {completed_at ? 
+                        new Date(completed_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        }) :
+                        (createdAt || (started_at ? new Date(started_at) : new Date())).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        })
+                    }
+                </h2>
             </article>
             {sessionDuration && (
                 <div className="duration">
