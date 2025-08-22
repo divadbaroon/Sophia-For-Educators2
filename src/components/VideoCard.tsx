@@ -32,14 +32,23 @@ const VideoCard = ({
     // Calculate duration from learning session data if available
     const calculateDuration = () => {
         if (duration) return duration // Use original duration if provided
-        
+
         if (started_at && completed_at) {
             const startTime = new Date(started_at).getTime()
             const endTime = new Date(completed_at).getTime()
             const durationMs = endTime - startTime
-            return Math.round(durationMs / 1000 / 60) // Convert to minutes
+            const totalMinutes = Math.round(durationMs / 1000 / 60)
+            
+            const hours = Math.floor(totalMinutes / 60)
+            const minutes = totalMinutes % 60
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}`
+            } else {
+                return totalMinutes
+            }
         }
-        
+
         return null
     }
 
@@ -90,7 +99,10 @@ const VideoCard = ({
             </article>
             {sessionDuration && (
                 <div className="duration">
-                    {sessionDuration}min
+                    {typeof sessionDuration === 'string' 
+                        ? `${sessionDuration}h` 
+                        : `${sessionDuration}min`
+                    }
                 </div>
             )}
         </Link>
