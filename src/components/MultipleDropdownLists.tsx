@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 import SingleDropdown  from "./SingleDropDownLists"
 
@@ -18,16 +18,11 @@ interface FilterState {
 
 const MultipleFilters = ({ onFiltersChange, availableLessons }: MultipleFiltersProps) => {
     const [filters, setFilters] = useState<FilterState>({
-        sortBy: 'Most recently completed',  
-        messageFilter: 'Has messages',      
+        sortBy: 'Most recent',  
+        messageFilter: 'All',      
         durationFilter: 'Duration',
         lessonSort: 'Lesson'
     })
-
-    // Apply default filters on mount
-    useEffect(() => {
-        onFiltersChange?.(filters)
-    }, []) 
 
     const updateFilter = (key: keyof FilterState, value: string) => {
         const newFilters = { ...filters, [key]: value }
