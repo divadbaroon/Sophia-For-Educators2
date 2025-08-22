@@ -47,7 +47,6 @@ const Page = () => {
     fetchSessions()
   }, [])
 
-  // Apply filters and sorting
   useEffect(() => {
     let filtered = [...sessionsData]
 
@@ -89,6 +88,11 @@ const Page = () => {
       filtered = filtered.filter(session => session.completed_at)
         .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
     }
+
+    // Console log the filtered data
+    console.log('🔍 Applied filters:', filters)
+    console.log('📊 Filtered sessions:', filtered)
+    console.log('📈 Filtered count:', filtered.length)
 
     setFilteredSessions(filtered)
   }, [sessionsData, filters])
