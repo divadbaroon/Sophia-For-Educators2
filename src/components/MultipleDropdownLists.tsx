@@ -18,7 +18,7 @@ interface FilterState {
 
 const MultipleFilters = ({ onFiltersChange, availableLessons }: MultipleFiltersProps) => {
     const [filters, setFilters] = useState<FilterState>({
-        sortBy: 'Most recent',  
+        sortBy: 'Date',  
         messageFilter: 'All',      
         durationFilter: 'Duration',
         lessonSort: 'Lesson'
