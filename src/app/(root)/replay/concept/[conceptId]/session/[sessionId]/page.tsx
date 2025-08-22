@@ -1,15 +1,11 @@
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Link, Trash2, ChevronDown, Play } from "lucide-react"
+import { Play } from "lucide-react"
 
 const VideoDetailsPage = () => {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="wrapper page">
 
-      {/* Main Content */}
-      <div className="px-6 py-6">
         {/* Video Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -23,32 +19,6 @@ const VideoDetailsPage = () => {
               <span>•</span>
               <span>3 days ago</span>
             </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              <Link className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-              <Trash2 className="w-4 h-4 mr-1" />
-              Delete video
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1 bg-transparent">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  Public
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Private</DropdownMenuItem>
-                <DropdownMenuItem className="bg-pink-50 text-pink-600">
-                  <span className="w-2 h-2 bg-pink-500 rounded-full mr-2"></span>
-                  Public
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
@@ -196,7 +166,6 @@ const VideoDetailsPage = () => {
             </Tabs>
           </div>
         </div>
-      </div>
     </main>
   )
 }
