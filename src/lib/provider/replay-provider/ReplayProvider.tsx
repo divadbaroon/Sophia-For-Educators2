@@ -1,49 +1,14 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+
 import { usePathname } from 'next/navigation';
+
 import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData';
+
 import { useSessionData } from '@/lib/hooks/useSessionData';
 
-import { SessionReplayData } from "@/types"
-
-interface SimulationContextType {
-  // Session data
-  sessionId: string | null
-  lessonId: string | null
-  sessionData: SessionReplayData | null
-  lessonStructure: any | null  // Added lesson structure
-  isLoading: boolean
-  isLoadingTasks: boolean      // Added lesson loading state
-  error: string | null
-  
-  // Timeline control
-  currentTime: number
-  sessionDuration: number
-  isPlaying: boolean
-  playbackSpeed: number
-  
-  // Timeline actions
-  setCurrentTime: (time: number) => void
-  setIsPlaying: (playing: boolean) => void
-  setPlaybackSpeed: (speed: number) => void
-  
-  // Filtered data at current time
-  codeAtCurrentTime: string | null
-  activeTaskAtCurrentTime: number | null
-  strokesUpToCurrentTime: any[]
-  messagesUpToCurrentTime: any[]
-  sophiaStateAtCurrentTime: {
-    isOpen: boolean
-    conversations: any[]
-    highlights: any[]
-  }
-  testResultsUpToCurrentTime: any[]
-  navigationEventsUpToCurrentTime: any[]
-  userHighlightsUpToCurrentTime: any[]
-  codeErrorsUpToCurrentTime: any[]
-  taskProgressUpToCurrentTime: any[]
-}
+import { SessionReplayData, SimulationContextType } from "@/types"
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
@@ -301,9 +266,9 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
     sessionId,
     lessonId,
     sessionData,
-    lessonStructure,        // ← ADD: Missing from the value object
+    lessonStructure,        
     isLoading,
-    isLoadingTasks,         // ← ADD: Missing from the value object
+    isLoadingTasks,         
     error,
     
     // Timeline control
@@ -329,84 +294,7 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
     codeErrorsUpToCurrentTime,
     taskProgressUpToCurrentTime,
   };
-
-  // Log filtered data whenever currentTime changes
-  useEffect(() => {
-    if (!sessionData) return;
-    
-    const timeInSeconds = (currentTime / 1000).toFixed(1);
-    const progressPercentage = sessionDuration > 0 ? ((currentTime / sessionDuration) * 100).toFixed(1) : '0';
-    
-    console.group(`🎬 FILTERED DATA at ${timeInSeconds}s (${progressPercentage}%)`);
-    
-    console.log('📝 Code:', {
-      hasCode: !!codeAtCurrentTime,
-      codeLength: codeAtCurrentTime?.length || 0,
-      preview: codeAtCurrentTime?.substring(0, 100) + '...' || 'No code yet'
-    });
-    
-    console.log('🧭 Navigation:', {
-      activeTask: activeTaskAtCurrentTime,
-      navigationEvents: navigationEventsUpToCurrentTime.length
-    });
-    
-    console.log('🎨 Drawing:', {
-      strokes: strokesUpToCurrentTime.length,
-      totalPoints: strokesUpToCurrentTime.reduce((sum, stroke) => sum + stroke.point_count, 0),
-      latestStroke: strokesUpToCurrentTime[strokesUpToCurrentTime.length - 1]?.zone || 'None'
-    });
-    
-    console.log('💬 Messages:', {
-      messages: messagesUpToCurrentTime.length,
-      latestMessage: messagesUpToCurrentTime[messagesUpToCurrentTime.length - 1]?.content.substring(0, 50) + '...' || 'No messages yet'
-    });
-    
-    console.log('🤖 Sophia State:', {
-      panelOpen: sophiaStateAtCurrentTime.isOpen,
-      conversations: sophiaStateAtCurrentTime.conversations.length,
-      highlights: sophiaStateAtCurrentTime.highlights.length
-    });
-    
-    console.log('🧪 Tests:', {
-      testResults: testResultsUpToCurrentTime.length,
-      latestTest: testResultsUpToCurrentTime[testResultsUpToCurrentTime.length - 1]?.passed ?? 'No tests yet'
-    });
-    
-    console.log('👆 Interactions:', {
-      userHighlights: userHighlightsUpToCurrentTime.length,
-      codeErrors: codeErrorsUpToCurrentTime.length
-    });
-    
-    console.log('📊 Progress:', {
-      taskProgress: taskProgressUpToCurrentTime.length,
-      completedTasks: taskProgressUpToCurrentTime.filter(t => t.completed).length
-    });
-    
-    // Show raw filtered arrays for detailed inspection
-    console.log('🗂️ Raw Filtered Data:', {
-      strokesUpToCurrentTime,
-      messagesUpToCurrentTime,
-      testResultsUpToCurrentTime,
-      userHighlightsUpToCurrentTime
-    });
-    
-    console.groupEnd();
-  }, [
-    currentTime, 
-    sessionData,
-    sessionDuration,
-    codeAtCurrentTime,
-    activeTaskAtCurrentTime,
-    strokesUpToCurrentTime,
-    messagesUpToCurrentTime,
-    sophiaStateAtCurrentTime,
-    testResultsUpToCurrentTime,
-    navigationEventsUpToCurrentTime,
-    userHighlightsUpToCurrentTime,
-    codeErrorsUpToCurrentTime,
-    taskProgressUpToCurrentTime
-  ]);
-
+  
   return (
     <SimulationContext.Provider value={value}>
       {children}
