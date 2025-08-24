@@ -39,8 +39,23 @@ export const formatDuration = (durationMs: number) => {
   }
 }
 
-export const formatConceptTitle = (slug: string) => {
-  return slug.split('-').map(word => 
+export const formatConceptTitle = (conceptId: string) => {
+  // Map concept IDs to their proper lesson names
+  const conceptIdMap: Record<string, string> = {
+    '899e4241-288a-4e7d-875d-f395ab32015d': 'Graph Algorithms',
+    'ed1cd4fa-42bc-4f59-8a3c-fc3fae1c9176': 'Binary Search Trees',
+    '0cff2209-b34f-45b4-8a79-9503d0066ab8': 'Singly Linked Lists',
+    '3317ea88-7f0b-45af-ad1e-57ed56b69d51': 'Hash Tables',
+    '15af35b6-69c4-43d0-8403-a273ed587ee0': 'Sorting Algorithms'
+  }
+  
+  // Return mapped name if it exists, otherwise fallback to formatted slug
+  if (conceptIdMap[conceptId]) {
+    return conceptIdMap[conceptId]
+  }
+  
+  // Fallback: format as title case from slug (original behavior)
+  return conceptId.split('-').map(word => 
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ')
 }
