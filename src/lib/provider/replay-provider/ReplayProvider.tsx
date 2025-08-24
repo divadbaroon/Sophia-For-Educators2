@@ -2,54 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 
-import { usePathname } from 'next/navigation';
-
 import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData';
-
 import { useSessionData } from '@/lib/hooks/useSessionData';
+
+import { useSimulationUrl } from '@/lib/hooks/useSimulationUrl';
+import { getTimeFromStart } from '@/lib/utils/replay-provider/time-utils';
 
 import { SessionReplayData, SimulationContextType } from "@/types"
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
-
-// Helper hook to extract sessionId from simulation URL
-const useSimulationUrl = () => {
-  const pathname = usePathname();
-  const [sessionId, setSessionId] = useState<string>('');
-  const [lessonId, setLessonId] = useState<string>('');
-
-  useEffect(() => {
-    // Match pattern: /replay/[lessonId]/session/[sessionId]
-     const urlMatch = pathname?.match(/\/replay\/concept\/([^\/]+)\/session\/([^\/]+)/);
-
-    
-    if (urlMatch) {
-      const [, newLessonId, newSessionId] = urlMatch;
-      
-      if (newLessonId !== lessonId || newSessionId !== sessionId) {
-        console.log("Simulation URL - Lesson ID:", newLessonId, "Session ID:", newSessionId);
-        setLessonId(newLessonId);
-        setSessionId(newSessionId);
-      }
-    }
-  }, [pathname, lessonId, sessionId]);
-
-  return { sessionId, lessonId };
-};
-
-// Helper function to convert timestamp to milliseconds from session start
-const getTimeFromStart = (timestamp: string, sessionStartTime: string): number => {
-  // Ensure both timestamps are treated consistently
-  const eventTime = new Date(timestamp).getTime();
-  
-  // If session start time doesn't have timezone info, assume it's UTC
-  const normalizedStartTime = sessionStartTime.includes('+') || sessionStartTime.includes('Z') 
-    ? sessionStartTime 
-    : sessionStartTime + '+00:00';
-    
-  const startTime = new Date(normalizedStartTime).getTime();
-  return eventTime - startTime;
-};
 
 export const SimulationProvider = ({ children }: { children: ReactNode }) => {
   // URL extraction
@@ -67,17 +28,6 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-
-  // Log lesson structure when loaded
-  useEffect(() => {
-    if (lessonStructure && !isLoadingTasks) {
-      console.log('📚 Lesson structure loaded:', {
-        tasks: lessonStructure.tasks?.length || 0,
-        lessonTitle: lessonStructure.title,
-        lessonId: lessonId
-      });
-    }
-  }, [lessonStructure, isLoadingTasks, lessonId]);
 
   // Calculate session duration
   const sessionDuration = useMemo(() => {
