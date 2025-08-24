@@ -1,9 +1,11 @@
 'use client'
 
 import { useMemo } from "react"
-import { Button } from "@/components/ui/button"
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+
 import { Play } from "lucide-react"
 
 import { useSimulation } from "@/lib/provider/replay-provider/ReplayProvider"
@@ -107,7 +109,6 @@ export const SimulationTerminal = () => {
     const latestTest = testResultsUpToCurrentTime[testResultsUpToCurrentTime.length - 1]
     if (!latestTest) return false
 
-    // This is a simple simulation - in reality you'd calculate if we're in the "execution window"
     return false // For now, just show results immediately
   }, [testResultsUpToCurrentTime, isVisualizationTask])
 
@@ -138,7 +139,7 @@ export const SimulationTerminal = () => {
         </div>
       </div>
 
-      {/* Terminal output area*/}
+      {/* Terminal output area */}
       <div className="flex-1 p-3">
         <Textarea
           value={terminalOutput || "Output will be displayed here..."}

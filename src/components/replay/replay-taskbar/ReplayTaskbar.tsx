@@ -1,11 +1,12 @@
 'use client'
 
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Card } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+
 import { ArrowLeft, ArrowRight, Target, CheckCircle, Lock, Play } from "lucide-react"
 
 import { useSimulation } from "@/lib/provider/replay-provider/ReplayProvider"
@@ -41,7 +42,7 @@ export const SimulationTaskSidebar = () => {
     progress => progress.task_index === currentMethodIndex && progress.completed
   )
 
-  // Check if current task is a visualization task (exactly like original)
+  // Check if current task is a visualization task
   const getVisualizationAssets = (task: any) => {
     const assetMapping: { [key: string]: { video: string, thumbnail: string } } = {
       'dfs_visualization': {
@@ -73,7 +74,7 @@ export const SimulationTaskSidebar = () => {
   return (
     <>
       <div className="h-screen flex flex-col bg-white transition-all duration-300 relative">
-        {/* Header - moved up to align with navbar */}
+        {/* Header */}
         <div className="flex-shrink-0 p-4 pt-4 pb-3 border-b bg-white">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2 flex-1">

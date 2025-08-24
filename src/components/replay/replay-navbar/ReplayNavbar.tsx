@@ -1,12 +1,14 @@
 "use client"
 
-import type React from "react"
-import { Menu } from "lucide-react"
 import { useState } from "react"
+
 import Link from "next/link"
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+
+import { Menu } from "lucide-react"
 
 export default function ReplayNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)

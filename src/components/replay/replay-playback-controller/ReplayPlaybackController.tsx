@@ -1,8 +1,11 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+
+import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+
 import { useSimulation } from "@/lib/provider/replay-provider/ReplayProvider"
 
 export const SimulationProgressBar = () => {
@@ -166,11 +169,6 @@ export const SimulationProgressBar = () => {
           <span className="text-sm font-mono tabular-nums text-gray-700">
             {formatTime(sessionDuration)}
           </span>
-        </div>
-
-        {/* Debug Info */}
-        <div className="text-xs text-gray-500 text-center">
-   
         </div>
       </div>
     </div>

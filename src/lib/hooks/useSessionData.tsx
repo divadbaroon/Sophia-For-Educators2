@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-
 import { getCodingTasksForLesson } from '@/lib/actions/coding-tasks-actions';
 
 import { UseSessionDataReturn, TaskData } from './types'
