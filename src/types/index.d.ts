@@ -150,3 +150,41 @@ export interface CodeEvent {
   description: string
   details?: string
 }
+
+export interface SimulationContextType {
+  // Session data
+  sessionId: string | null
+  lessonId: string | null
+  sessionData: SessionReplayData | null
+  lessonStructure: any | null  
+  isLoading: boolean
+  isLoadingTasks: boolean      
+  error: string | null
+  
+  // Timeline control
+  currentTime: number
+  sessionDuration: number
+  isPlaying: boolean
+  playbackSpeed: number
+  
+  // Timeline actions
+  setCurrentTime: (time: number) => void
+  setIsPlaying: (playing: boolean) => void
+  setPlaybackSpeed: (speed: number) => void
+  
+  // Filtered data at current time
+  codeAtCurrentTime: string | null
+  activeTaskAtCurrentTime: number | null
+  strokesUpToCurrentTime: any[]
+  messagesUpToCurrentTime: any[]
+  sophiaStateAtCurrentTime: {
+    isOpen: boolean
+    conversations: any[]
+    highlights: any[]
+  }
+  testResultsUpToCurrentTime: any[]
+  navigationEventsUpToCurrentTime: any[]
+  userHighlightsUpToCurrentTime: any[]
+  codeErrorsUpToCurrentTime: any[]
+  taskProgressUpToCurrentTime: any[]
+}
