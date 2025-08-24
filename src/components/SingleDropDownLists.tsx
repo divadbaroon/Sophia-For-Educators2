@@ -11,7 +11,7 @@ interface SingleDropdownProps {
     placeholder?: string
 }
 
-const SingleDropdown = ({ label, options, selectedValue, onValueChange, placeholder }: SingleDropdownProps) => {
+const SingleDropdown = ({ label, options, selectedValue, onValueChange }: SingleDropdownProps) => {
     const [isOpen, setIsOpen] = useState(false)
 
     const handleOptionClick = (option: string) => {
