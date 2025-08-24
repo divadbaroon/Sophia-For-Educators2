@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react"
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { Button } from "@/components/ui/button"
-import { HelpCircle, Pencil, Trash2, X, Menu } from "lucide-react"
 import Link from "next/link"
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Avatar, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+
+import { HelpCircle, Pencil, Trash2, X } from "lucide-react"
 
 import { SimulationTaskSidebar } from "@/components/replay/replay-taskbar/ReplayTaskbar"
 import { SimulationCodeEditor } from "@/components/replay/replay-code-editor/ReplayCodeEditor"
@@ -29,7 +31,6 @@ export const SimulationWorkspaceLayout: React.FC = () => {
   // Local state for UI controls
   const [terminalHeight, setTerminalHeight] = useState(50)
   const [isQuestionPanelVisible, setIsQuestionPanelVisible] = useState(false)
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   // Get current task info
   const currentTask = lessonStructure?.tasks?.[activeTaskAtCurrentTime || 0]
@@ -52,8 +53,6 @@ export const SimulationWorkspaceLayout: React.FC = () => {
 
   // Calculate button positioning
   const sophiaButtonText = isQuestionPanelVisible ? 'Close Sophia' : 'Ask Sophia'
-  const sophiaButtonWidth = isQuestionPanelVisible ? 140 : 130
-  const drawingButtonsRightPosition = sophiaButtonWidth + 61
 
   // Sophia panel controls
   const onToggleSophia = () => {
@@ -62,10 +61,6 @@ export const SimulationWorkspaceLayout: React.FC = () => {
     } else {
       setIsQuestionPanelVisible(true)
     }
-  }
-
-  const onCloseSophia = () => {
-    setIsQuestionPanelVisible(false)
   }
 
   // Handle drawing mode - show status only
@@ -104,7 +99,7 @@ export const SimulationWorkspaceLayout: React.FC = () => {
 
   return (
     <>
-      {/* Clean Navbar with Ask Sophia button */}
+      {/* Replica Navbar with Ask Sophia button */}
       <nav className="w-full bg-white border-b">
         <div className="px-6 py-3">
           <div className="flex justify-between items-center">
@@ -113,7 +108,7 @@ export const SimulationWorkspaceLayout: React.FC = () => {
             </Link>
             
             <div className="flex items-center gap-4">
-              {/* Drawing Controls - show in navbar for visualization tasks */}
+              {/* Drawing Controls on navbar */}
               {isVisualizationTask && (
                 <div className="flex gap-2">
                   {/* Draw Button*/}
