@@ -1,56 +1,23 @@
 'use client'
 
 import React, { useRef, useMemo, useEffect } from 'react';
+
+import { EditorView } from '@codemirror/view';
+import { vscodeLight } from '@uiw/codemirror-theme-vscode';
+import { indentUnit } from '@codemirror/language';
 import CodeMirror from '@uiw/react-codemirror';
+import { java } from '@codemirror/lang-java';
 
 import SimulationDFSVisualizationOverlay from '@/components/replay/replay-visualizations/ReplayDFSVisualization';
 import SimulationHashTableVisualizationOverlay from '@/components/replay/replay-visualizations/ReplayHashTableVisualization';
 import SimulationBinaryTreeVisualizationOverlay from '@/components/replay/replay-visualizations/ReplayBinaryTreeVisualization';
 
-import { java } from '@codemirror/lang-java';
-import { indentUnit } from '@codemirror/language';
-import { EditorView, Decoration, DecorationSet } from '@codemirror/view' 
-import { StateField, StateEffect } from '@codemirror/state';
-import { vscodeLight } from '@uiw/codemirror-theme-vscode';
-
 import { useSimulation } from "@/lib/provider/replay-provider/ReplayProvider";
 
 import { createFontSizeExtension } from '@/lib/utils/replay-code-editor/ReplayCodeEditorUtils';
+import { highlightField, applyHighlight } from '@/lib/utils/replay-code-editor/codemirror-highlight';
 
-interface SimulationCodeEditorProps {
-  className?: string;
-  terminalHeight?: number;
-}
-
-// Create highlight decoration with light yellow
-const highlightMark = Decoration.line({
-  attributes: { style: "background-color: #fff9c4; animation: highlightPersist 5s forwards;" }
-});
-
-// State effect to add highlight
-const addHighlight = StateEffect.define<number>();
-
-// State field to manage highlights
-const highlightField = StateField.define<DecorationSet>({
-  create() {
-    return Decoration.none;
-  },
-  update(highlights, tr) {
-    highlights = highlights.map(tr.changes);
-    
-    for (const effect of tr.effects) {
-      if (effect.is(addHighlight)) {
-        const line = tr.state.doc.line(effect.value);
-        highlights = highlights.update({
-          add: [highlightMark.range(line.from, line.from)]
-        });
-      }
-    }
-    
-    return highlights;
-  },
-  provide: f => EditorView.decorations.from(f)
-});
+import { SimulationCodeEditorProps } from "./types"
 
 export const SimulationCodeEditor = ({ 
   className = '', 
@@ -109,14 +76,7 @@ public class Solution {
       const lineNumber = latestHighlight.line_number;
       console.log("🔆 Simulation: Highlighting line:", lineNumber);
       
-      try {
-        // Add highlight to the line
-        editorViewRef.current.dispatch({
-          effects: addHighlight.of(lineNumber)
-        });
-      } catch (error) {
-        console.error("❌ Error applying highlight:", error);
-      }
+      applyHighlight(editorViewRef.current, lineNumber);
     }
   }, [sophiaStateAtCurrentTime.highlights]);
 
@@ -141,11 +101,11 @@ public class Solution {
     return (
       <div className={`h-full flex flex-col relative ${className}`}>
         <SimulationHashTableVisualizationOverlay 
-          onInteraction={() => {}} // Read-only in simulation
+          onInteraction={() => {}} 
           terminalHeight={terminalHeight}
           sessionId={sessionId || 'simulation'}     
           lessonId={lessonId || 'simulation'}
-          strokesData={strokesUpToCurrentTime} // Pass timeline-filtered strokes
+          strokesData={strokesUpToCurrentTime} 
         />
       </div>
     );
@@ -160,7 +120,7 @@ public class Solution {
           terminalHeight={terminalHeight}
           sessionId={sessionId || 'simulation'}     
           lessonId={lessonId || 'simulation'}
-          strokesData={strokesUpToCurrentTime} // Pass timeline-filtered strokes
+          strokesData={strokesUpToCurrentTime} 
         />
       </div>
     );
