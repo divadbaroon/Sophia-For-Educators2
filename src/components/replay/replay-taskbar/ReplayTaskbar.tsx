@@ -10,7 +10,7 @@ import { ArrowLeft, ArrowRight, Target, CheckCircle, Lock, Play } from "lucide-r
 
 import { useSimulation } from "@/lib/provider/replay-provider/ReplayProvider"
 
-import { conceptIcons } from "@/lib/constants/conceptIcons"
+import { conceptIcons } from "@/constants"
 
 export const SimulationTaskSidebar = () => {
   const {
