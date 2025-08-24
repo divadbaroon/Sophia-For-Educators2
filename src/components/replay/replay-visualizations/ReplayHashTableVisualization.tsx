@@ -2,16 +2,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 
-interface SimulationHashTableVisualizationOverlayProps {
-  onInteraction: () => void; // Dummy function for replay
-  terminalHeight?: number;
-  sessionId: string | null;    
-  lessonId: string | null; 
-  strokesData?: Array<{
-    zone: string;
-    complete_points: Array<{x: number, y: number}>;
-  }>; // Optional stroke data for replay
-}
+import { SimulationHashTableVisualizationOverlayProps } from "./types"
 
 const SimulationHashTableVisualizationOverlay: React.FC<SimulationHashTableVisualizationOverlayProps> = ({ 
   terminalHeight = 50,
@@ -194,14 +185,9 @@ const SimulationHashTableVisualizationOverlay: React.FC<SimulationHashTableVisua
           className="border-2 border-gray-300 rounded-lg shadow-sm mx-auto cursor-default opacity-90"
           style={{ 
             maxWidth: '100%',
-            display: 'block' // Ensure consistent positioning
+            display: 'block' 
           }}
         />
-        
-        {/* Debug info */}
-        <div className="mt-2 text-xs text-gray-500">
-          Replaying {strokesData.length} strokes
-        </div>
       </div>
     </div>
   );
