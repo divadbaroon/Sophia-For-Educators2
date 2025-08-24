@@ -61,7 +61,7 @@ const VideoCard = ({
 
     return (
         <Link 
-            href={`/replay/concept/${lesson ? formatLessonForUrl(lesson) : lessonId}/session/${sessionId || id}`} 
+            href={`/replay/concept/${lessonId}/session/${sessionId || id}`} 
             className="video-card"
         >
             <Image src={thumbnail || '/assets/images/placeholder-thumbnail.jpg'} alt="thumbnail" width={290} height={160}
