@@ -212,7 +212,7 @@ export const SimulationWorkspaceLayout: React.FC = () => {
 
                 {/* Drag handle for resizing terminal*/}
                 <div
-                  className="absolute left-0 right-0 h-2 bg-gray-100 hover:bg-gray-200 cursor-ns-resize z-20"
+                  className="absolute left-0 right-0 h-2 bg-gray-200 hover:bg-gray-100 cursor-ns-resize z-20"
                   style={{
                     bottom: `${terminalHeight}%`,
                     marginBottom: "-4px",
