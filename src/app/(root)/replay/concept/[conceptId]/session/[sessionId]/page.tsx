@@ -66,7 +66,9 @@ const VideoDetailsPage = ({ params }: VideoDetailsPageProps) => {
       <SessionHeader conceptId={conceptId} sessionInfo={sessionInfo} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <VideoPlayer duration_ms={sessionInfo.duration_ms} />
+        <VideoPlayer 
+          sessionData={sessionData} 
+        />
 
         <div className="lg:col-span-1">
           <Tabs defaultValue="transcript" className="w-full">
