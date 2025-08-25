@@ -148,17 +148,6 @@ export const SimulationTerminal = () => {
           placeholder="Output will be displayed here..."
         />
       </div>
-
-      {/* Status bar */}
-      <div className="px-3 py-1 border-t bg-muted/20 text-xs text-muted-foreground">
-        {isVisualizationTask ? (
-          "Visualization task - no terminal output"
-        ) : testResultsUpToCurrentTime.length === 0 && codeErrorsUpToCurrentTime.length === 0 ? (
-          "No output yet"
-        ) : (
-          `${testResultsUpToCurrentTime.length} test results, ${codeErrorsUpToCurrentTime.length} errors`
-        )}
-      </div>
     </div>
   )
 }
