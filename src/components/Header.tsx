@@ -171,36 +171,45 @@ const Header = ({ subHeader, title, userImg, onFiltersChange, availableLessons }
                 realistic student personas for pedagogical testing.
             </p>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-green-900 mb-3">📋 Generated Profile Template:</h3>
+                <h3 className="font-medium text-green-900 mb-3">Profile Template:</h3>
                 <div className="bg-white border border-green-300 rounded-md p-3 text-xs font-mono overflow-x-auto">
                 <pre className="text-green-800">
         {`{
-        "profileId": "confused-persistent-beginner",
-        "competency": {
-            "knowledgeState": ["basic programming", "struggles with recursion"],
-            "misconceptions": ["recursion = loops", "confused about base cases"],
-            "learningSpeed": "slow but steady",
-            "confidence": "appropriately uncertain"
+        "profileId": "id",
+        "knowledgeComponents": { // KLI Framework https://arxiv.org/pdf/2405.11591
+            "basic_programming": "mastered",
+            "recursion": "confused", 
+            "iteration": "mastered",
+            "data_structures": "unknown",
+            "algorithms": "unknown"
         },
-        "helpSeeking": {
-            "trigger": "asks help after 2-3 failed attempts",
-            "questionTypes": ["debugging", "conceptual clarification"],
-            "communicationStyle": "brief and direct",
-            "persistence": "high - keeps trying with guidance"
+        "misconceptions": {
+            "recursion": ["thinks recursion is just loops", "unclear about base cases"],
+            "data_structures": []
         },
-        "engagement": {
-            "responsePattern": "interactive, asks follow-ups",
-            "emotionalExpression": "shows frustration but stays motivated",
-            "successReaction": "excited about small wins",
-            "confusionHandling": "explicitly states when lost"
+        "studentTraits": { // From Teach Tune https://arxiv.org/pdf/2410.04078
+            "academic_self_efficacy": 2,     // 1-5 scale (low confidence)
+            "intrinsic_motivation": 4,       // 1-5 scale (high motivation)  
+            "academic_stress": 3,            // 1-5 scale (moderate stress)
+            "goal_commitment": 4             // 1-5 scale (high commitment)
         },
-        "preferences": {
-            "explanationStyle": "step-by-step walkthroughs",
-            "feedbackReceptivity": "prefers hints over direct answers",
-            "challengeTolerance": "comfortable with appropriate difficulty",
-            "socialStyle": "benefits from encouragement"
+        "interactionPatterns": { // Pulled directly from data
+            "frequency": "high",             // high/medium/low from conversation logs
+            "session_consistency": "regular" // regular/sporadic/declining
+        },
+        "emotionalIndicators": { // Pulled directly from data
+            "frustration_level": "medium",   // from sentiment analysis of messages
+            "confidence_level": "low",       // "I think maybe?" vs "It's definitely X"
+            "excitement_level": "high"       // "Cool!" "That worked!" frequency
+        },
+        "helpSeekingBehavior": { // Pulled directly from data
+            "debugging_help": "frequent",    // "Why doesn't this work?"
+            "conceptual_help": "occasional", // "What is recursion?"
+            "optimization_help": "never",    // "How to make this faster?"
+            "syntax_help": "rare",          // "What's the right syntax?"
+            "trigger_point": "after 2-3 attempts" // when they ask for help
         }
-        }`}
+    }`}
                 </pre>
                 </div>
             </div>
@@ -234,7 +243,7 @@ const Header = ({ subHeader, title, userImg, onFiltersChange, availableLessons }
                 </>
                 ) : (
                 <>
-                    <Image src="/assets/icons/wand.svg" alt="generate" width={16} height={16} className="filter invert" />
+                    <Image src="/assets/icons/wand.svg" alt="generate" width={16} height={16}></Image>
                     <span>Generate Profiles</span>
                 </>
                 )}
