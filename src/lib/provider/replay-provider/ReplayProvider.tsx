@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 
-import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData';
 import { useSessionData } from '@/lib/hooks/useSessionData';
 
 import { useSimulationUrl } from '@/lib/hooks/useSimulationUrl';
@@ -12,15 +11,21 @@ import { SessionReplayData, SimulationContextType } from "@/types"
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
-export const SimulationProvider = ({ children }: { children: ReactNode }) => {
+export const SimulationProvider = ({ 
+  children, 
+  initialSessionData 
+}: { 
+  children: ReactNode
+  initialSessionData?: SessionReplayData | null 
+}) => {
   // URL extraction
   const { sessionId, lessonId } = useSimulationUrl();
   
   // Load lesson structure data (tasks, examples, templates)
   const { sessionData: lessonStructure, isLoadingTasks } = useSessionData(lessonId);
   
-  // Session replay data state
-  const [sessionData, setSessionData] = useState<SessionReplayData | null>(null);
+  // Session replay data state - use initial data if provided
+  const [sessionData, setSessionData] = useState<SessionReplayData | null>(initialSessionData || null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -88,53 +93,21 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
     return audioCache[conversationId] || null;
   }, [audioCache]);
 
-  // Load session data when sessionId changes
+  // Load session data when sessionId changes (only if not provided initially)
   useEffect(() => {
     if (!sessionId) return;
-
-    const loadSessionData = async () => {
-      setIsLoading(true);
-      setError(null);
+    
+    // If we already have initial session data, just start audio preloading
+    if (initialSessionData) {
+      console.log('🎬 Using provided session data, starting audio preload...');
+      setSessionData(initialSessionData);
       
-      try {
-        console.log('🎬 Loading session replay data for sessionId:', sessionId);
-        
-        const result = await fetchSessionReplayData(sessionId);
-        
-        if (result.success && result.data) {
-          setSessionData(result.data);
-          console.log('✅ Session data loaded successfully!', {
-            duration: result.data.sessionInfo.duration_ms,
-            conversations: result.data.sophiaConversations.length,
-            totalEvents: {
-              codeSnapshots: result.data.codeSnapshots.length,
-              strokes: result.data.strokeData.length,
-              navigation: result.data.navigationEvents.length,
-              tests: result.data.testResults.length,
-              messages: result.data.messages.length,
-              sophiaConversations: result.data.sophiaConversations.length,
-              sophiaInteractions: result.data.sophiaButtonInteractions.length
-            }
-          });
-
-          // Start background audio preloading (don't wait for it)
-          if (result.data.sophiaConversations.length > 0) {
-            preloadAudioInBackground(result.data.sophiaConversations);
-          }
-        } else {
-          console.error('❌ Failed to load session data:', result.error);
-          setError(result.error || 'Failed to load session data');
-        }
-      } catch (err) {
-        console.error('💥 Error loading session data:', err);
-        setError('Failed to load session data');
-      } finally {
-        setIsLoading(false);
+      if (initialSessionData.sophiaConversations.length > 0) {
+        preloadAudioInBackground(initialSessionData.sophiaConversations);
       }
-    };
-
-    loadSessionData();
-  }, [sessionId]);
+      return;
+    }
+  }, [sessionId, initialSessionData]);
 
   // Filter data based on current time
   const codeAtCurrentTime = useMemo(() => {
