@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 
 import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData';
 import { useSessionData } from '@/lib/hooks/useSessionData';
@@ -24,6 +24,14 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Audio cache state
+  const [audioCache, setAudioCache] = useState<Record<string, Blob>>({});
+  const [audioPreloadStatus, setAudioPreloadStatus] = useState({
+    isPreloading: false,
+    progress: 0,
+    totalConversations: 0
+  });
+  
   // Timeline control state
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -33,6 +41,52 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
   const sessionDuration = useMemo(() => {
     return sessionData?.sessionInfo.duration_ms || 0;
   }, [sessionData]);
+
+  // Preload and store audio data
+  const preloadAudioInBackground = async (conversations: any[]) => {
+    if (conversations.length === 0) return;
+
+    console.log(`🎵 Preloading and caching ${conversations.length} audio files...`);
+    setAudioPreloadStatus({
+      isPreloading: true,
+      progress: 0,
+      totalConversations: conversations.length
+    });
+
+    const newCache: Record<string, Blob> = {};
+    let loaded = 0;
+    
+    // Use Promise.allSettled to preload all audio in parallel
+    const preloadPromises = conversations.map(async (conversation) => {
+      try {
+        const response = await fetch(`/api/elevenlabs/conversation-audio/${conversation.conversation_id}`);
+        if (response.ok) {
+          const audioBlob = await response.blob();
+          newCache[conversation.conversation_id] = audioBlob;
+          console.log(`✅ Cached: ${conversation.conversation_id}`);
+        } else {
+          console.log(`⚠️ Failed to preload: ${conversation.conversation_id}`);
+        }
+      } catch (error) {
+        console.log(`⚠️ Error preloading: ${conversation.conversation_id}`, error);
+      }
+      
+      loaded++;
+      const progress = (loaded / conversations.length) * 100;
+      setAudioPreloadStatus(prev => ({ ...prev, progress }));
+    });
+
+    await Promise.allSettled(preloadPromises);
+    
+    setAudioCache(newCache);
+    setAudioPreloadStatus(prev => ({ ...prev, isPreloading: false }));
+    console.log(`🎵 ✅ Audio cache loaded: ${Object.keys(newCache).length} conversations ready!`);
+  };
+
+  // Get cached audio blob
+  const getCachedAudioBlob = useCallback((conversationId: string): Blob | null => {
+    return audioCache[conversationId] || null;
+  }, [audioCache]);
 
   // Load session data when sessionId changes
   useEffect(() => {
@@ -51,6 +105,7 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
           setSessionData(result.data);
           console.log('✅ Session data loaded successfully!', {
             duration: result.data.sessionInfo.duration_ms,
+            conversations: result.data.sophiaConversations.length,
             totalEvents: {
               codeSnapshots: result.data.codeSnapshots.length,
               strokes: result.data.strokeData.length,
@@ -61,6 +116,11 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
               sophiaInteractions: result.data.sophiaButtonInteractions.length
             }
           });
+
+          // Start background audio preloading (don't wait for it)
+          if (result.data.sophiaConversations.length > 0) {
+            preloadAudioInBackground(result.data.sophiaConversations);
+          }
         } else {
           console.error('❌ Failed to load session data:', result.error);
           setError(result.error || 'Failed to load session data');
@@ -231,6 +291,11 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
     setCurrentTime,
     setIsPlaying,
     setPlaybackSpeed,
+    
+    // Audio functions (cached blobs)
+    getCachedAudioBlob,
+    audioPreloadProgress: audioPreloadStatus.progress,
+    isAudioPreloading: audioPreloadStatus.isPreloading,
     
     // Filtered data at current time
     codeAtCurrentTime,

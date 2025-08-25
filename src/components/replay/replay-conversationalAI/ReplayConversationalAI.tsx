@@ -18,10 +18,11 @@ const SimulationSophiaPanel = () => {
     currentTime,
     sessionDuration,
     sessionData,
-    isPlaying 
+    isPlaying,
+    getCachedAudioBlob,
   } = useSimulation()
 
-  // audio state
+  // audio state 
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null)
   const [isLoadingAudio, setIsLoadingAudio] = useState(false)
   const [currentPlayingConversationId, setCurrentPlayingConversationId] = useState<string | null>(null)
@@ -107,7 +108,7 @@ const SimulationSophiaPanel = () => {
     }
   }
 
-  // Timeline-synced audio playback
+  // Timeline-synced audio playback 
   const playConversationAudio = async (conversationId: string, conversationStartTime: number) => {
     if (isLoadingAudio) return;
     if (currentPlayingConversationId === conversationId) {
@@ -132,14 +133,13 @@ const SimulationSophiaPanel = () => {
         setCurrentAudio(null)
       }
       
-      const response = await fetch(`/api/elevenlabs/conversation-audio/${conversationId}`)
-      
-      if (!response.ok) {
-        console.error(`❌ API failed: ${response.status}`)
-        return
+      // Using cached audio blob now
+      const audioBlob = getCachedAudioBlob(conversationId);
+      if (!audioBlob) {
+        console.error(`❌ No cached audio found for conversation: ${conversationId}`);
+        return;
       }
       
-      const audioBlob = await response.blob()
       console.log(`✅ Audio ready: ${audioBlob.size} bytes`)
       
       const audioUrl = URL.createObjectURL(audioBlob)
