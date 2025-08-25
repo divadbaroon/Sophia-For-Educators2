@@ -140,13 +140,57 @@ export const SimulationProvider = ({
     return latestNav?.to_task_index ?? 0; // Default to task 0
   }, [sessionData, currentTime]);
 
+  // Stroke data with fallback to visualization interactions
   const strokesUpToCurrentTime = useMemo(() => {
     if (!sessionData) return [];
     
     const sessionStart = sessionData.sessionInfo.started_at;
-    return sessionData.strokeData.filter(stroke => {
+    
+    // First, try to get stroke data
+    const strokes = sessionData.strokeData.filter(stroke => {
       const strokeTime = getTimeFromStart(stroke.created_at, sessionStart);
       return strokeTime <= currentTime;
+    });
+    
+    // If no stroke data available, fallback to visualization interactions
+    if (strokes.length === 0 && sessionData.visualizationInteractions) {
+      console.log('🔄 No stroke data found, falling back to visualization interactions');
+      
+      return sessionData.visualizationInteractions
+        .filter(interaction => {
+          const interactionTime = getTimeFromStart(interaction.timestamp, sessionStart);
+          return interactionTime <= currentTime;
+        })
+        .map(interaction => ({
+          // Transform interaction data to match stroke data structure
+          id: interaction.id,
+          task: interaction.task,
+          zone: interaction.zone,
+          // Map interaction properties to stroke-like properties
+          stroke_number: 1,
+          point_count: 1,
+          complete_points: [{ x: interaction.x, y: interaction.y }],
+          start_point: { x: interaction.x, y: interaction.y },
+          end_point: { x: interaction.x, y: interaction.y },
+          created_at: interaction.timestamp,
+          // Add interaction-specific data
+          interaction_action: interaction.action,
+          interaction_x: interaction.x,
+          interaction_y: interaction.y
+        }));
+    }
+    
+    return strokes;
+  }, [sessionData, currentTime]);
+
+  // Add separate visualization interactions data
+  const visualizationInteractionsUpToCurrentTime = useMemo(() => {
+    if (!sessionData || !sessionData.visualizationInteractions) return [];
+    
+    const sessionStart = sessionData.sessionInfo.started_at;
+    return sessionData.visualizationInteractions.filter(interaction => {
+      const interactionTime = getTimeFromStart(interaction.timestamp, sessionStart);
+      return interactionTime <= currentTime;
     });
   }, [sessionData, currentTime]);
 
@@ -278,6 +322,7 @@ export const SimulationProvider = ({
     sophiaStateAtCurrentTime,
     testResultsUpToCurrentTime,
     navigationEventsUpToCurrentTime,
+    visualizationInteractionsUpToCurrentTime,
     userHighlightsUpToCurrentTime,
     codeErrorsUpToCurrentTime,
     taskProgressUpToCurrentTime,
