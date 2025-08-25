@@ -4,11 +4,16 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Maximize2, Minimize2 } from "lucide-react";
 
 import { useSimulation } from "@/lib/provider/replay-provider/ReplayProvider"
 
-export const SimulationProgressBar = () => {
+interface SimulationProgressBarProps {
+  isExpanded?: boolean
+  onToggleExpand?: () => void
+}
+
+export const SimulationProgressBar = ({ isExpanded, onToggleExpand }: SimulationProgressBarProps) => {
   const { 
     currentTime, 
     setCurrentTime, 
@@ -94,7 +99,7 @@ export const SimulationProgressBar = () => {
   const progressPercentage = sessionDuration > 0 ? (currentTime / sessionDuration) * 100 : 0;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
+    <div className={`${isExpanded ? 'relative' : 'fixed bottom-0 left-0 right-0'} bg-white border-t border-gray-200 p-4 shadow-lg`}>
       <div className="max-w-4xl mx-auto flex flex-col space-y-3">
 
         {/* Controls and Timeline */}
@@ -169,6 +174,23 @@ export const SimulationProgressBar = () => {
           <span className="text-sm font-mono tabular-nums text-gray-700">
             {formatTime(sessionDuration)}
           </span>
+
+          {/* Expand/Minimize Button */}
+          {onToggleExpand && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleExpand}
+              className="ml-2"
+              title={isExpanded ? "Exit expanded view" : "Expand view"}
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </div>
