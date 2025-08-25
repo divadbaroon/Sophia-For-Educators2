@@ -40,6 +40,16 @@ export interface SessionReplayData {
     created_at: string
   }>
   
+  visualizationInteractions: Array<{
+    id: string
+    task: string
+    action: string
+    zone: string
+    x: number
+    y: number
+    timestamp: string
+  }>
+  
   testResults: Array<{
     id: string
     task_index: number
@@ -156,9 +166,9 @@ export interface SimulationContextType {
   sessionId: string | null
   lessonId: string | null
   sessionData: SessionReplayData | null
-  lessonStructure: any | null  
+  lessonStructure: any | null
   isLoading: boolean
-  isLoadingTasks: boolean      
+  isLoadingTasks: boolean
   error: string | null
   
   // Timeline control
@@ -172,6 +182,11 @@ export interface SimulationContextType {
   setIsPlaying: (playing: boolean) => void
   setPlaybackSpeed: (speed: number) => void
   
+  // Audio functions (cached blobs)
+  getCachedAudioBlob: (conversationId: string) => Blob | null
+  audioPreloadProgress: number
+  isAudioPreloading: boolean
+  
   // Filtered data at current time
   codeAtCurrentTime: string | null
   activeTaskAtCurrentTime: number | null
@@ -184,11 +199,8 @@ export interface SimulationContextType {
   }
   testResultsUpToCurrentTime: any[]
   navigationEventsUpToCurrentTime: any[]
+  visualizationInteractionsUpToCurrentTime: any[]
   userHighlightsUpToCurrentTime: any[]
   codeErrorsUpToCurrentTime: any[]
   taskProgressUpToCurrentTime: any[]
-
-  getCachedAudioBlob: (conversationId: string) => Blob | null;
-  audioPreloadProgress: number;
-  isAudioPreloading: boolean;
 }
