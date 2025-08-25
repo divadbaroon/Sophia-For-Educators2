@@ -187,4 +187,8 @@ export interface SimulationContextType {
   userHighlightsUpToCurrentTime: any[]
   codeErrorsUpToCurrentTime: any[]
   taskProgressUpToCurrentTime: any[]
+
+  getCachedAudioBlob: (conversationId: string) => Blob | null;
+  audioPreloadProgress: number;
+  isAudioPreloading: boolean;
 }
