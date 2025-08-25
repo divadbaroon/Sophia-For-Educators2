@@ -54,18 +54,30 @@ export async function fetchSessionReplayData(sessionId: string) {
 
     console.log('🔍 Fetching stroke data...')
     const strokeData = await supabase
-    .from('visualization_stroke_data')
-    .select('*')  
-    .eq('session_id', sessionId)
-    .order('created_at')
-    
+      .from('visualization_stroke_data')
+      .select('*')  
+      .eq('session_id', sessionId)
+      .order('created_at')
+      
     console.log('🎨 Stroke data:', strokeData.data?.length || 0, 'entries')
     if (strokeData.data && strokeData.data.length > 0) {
     console.log('🎨 First stroke entry structure:', strokeData.data[0])
     }
     if (strokeData.error) {
     console.error('🎨 Stroke data error:', strokeData.error)
-}
+    }
+
+    console.log('🔍 Fetching visualization interactions...')
+    const visualizationInteractions = await supabase
+      .from('visualization_interactions')
+      .select('id, task, action, zone, x, y, timestamp')
+      .eq('session_id', sessionId)
+      .order('timestamp')
+      
+    console.log('👆 Visualization interactions:', visualizationInteractions.data?.length || 0, 'entries')
+    if (visualizationInteractions.error) {
+      console.error('👆 Visualization interactions error:', visualizationInteractions.error)
+    }
 
     console.log('🔍 Fetching test results...')
     const testResults = await supabase
@@ -147,6 +159,7 @@ export async function fetchSessionReplayData(sessionId: string) {
       codeSnapshots.error,
       navigationEvents.error,
       strokeData.error,
+      visualizationInteractions.error,
       testResults.error,
       sophiaButtonInteractions.error,
       sophiaConversations.error,
@@ -171,6 +184,7 @@ export async function fetchSessionReplayData(sessionId: string) {
       codeSnapshots: codeSnapshots.data || [],
       navigationEvents: navigationEvents.data || [],
       strokeData: strokeData.data || [],
+      visualizationInteractions: visualizationInteractions.data || [],
       testResults: testResults.data || [],
       sophiaButtonInteractions: sophiaButtonInteractions.data || [],
       sophiaConversations: sophiaConversations.data || [],
@@ -184,6 +198,7 @@ export async function fetchSessionReplayData(sessionId: string) {
     const totalEvents = replayData.codeSnapshots.length + 
                        replayData.navigationEvents.length + 
                        replayData.strokeData.length + 
+                       replayData.visualizationInteractions.length +
                        replayData.testResults.length + 
                        replayData.messages.length
 
@@ -191,6 +206,7 @@ export async function fetchSessionReplayData(sessionId: string) {
       codeSnapshots: replayData.codeSnapshots.length,
       navigationEvents: replayData.navigationEvents.length,
       strokeData: replayData.strokeData.length,
+      visualizationInteractions: replayData.visualizationInteractions.length,
       testResults: replayData.testResults.length,
       sophiaButtonInteractions: replayData.sophiaButtonInteractions.length,
       sophiaConversations: replayData.sophiaConversations.length,
