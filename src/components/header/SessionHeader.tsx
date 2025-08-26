@@ -1,14 +1,10 @@
 import React from 'react'
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import { formatDuration, formatConceptTitle } from '@/lib/utils/formatters'
 
-interface SessionHeaderProps {
-  conceptId: string
-  sessionInfo: {
-    status: string
-    duration_ms: number | null
-  }
-}
+import { SessionHeaderProps } from './types'
 
 export const SessionHeader: React.FC<SessionHeaderProps> = ({ conceptId, sessionInfo }) => {
   return (

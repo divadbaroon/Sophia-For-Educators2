@@ -1,14 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
+
 import { SimulationWorkspaceLayout } from "@/components/replay/replay-work-space/ReplayWorkSpace"
 import { SimulationProgressBar } from "@/components/replay/replay-playback-controller/ReplayPlaybackController"
-import { SimulationProvider } from '@/lib/provider/replay-provider/ReplayProvider'
-import { SessionReplayData } from "@/types"
 
-interface VideoPlayerProps {
-  sessionData?: SessionReplayData | null  
-}
+import { SimulationProvider } from '@/lib/provider/replay-provider/ReplayProvider'
+
+import { SessionReplayData } from "@/types"
+import { VideoPlayerProps } from './types'
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
   sessionData 

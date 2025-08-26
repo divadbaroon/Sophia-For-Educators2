@@ -4,17 +4,7 @@ import { useState } from "react"
 
 import SingleDropdown  from "./SingleDropDownLists"
 
-interface MultipleFiltersProps {
-    onFiltersChange?: (filters: FilterState) => void
-    availableLessons?: string[] 
-}
-
-interface FilterState {
-    sortBy: string
-    messageFilter: string
-    durationFilter: string
-    lessonSort: string
-}
+import { MultipleFiltersProps, FilterState  } from './types'
 
 const MultipleFilters = ({ onFiltersChange, availableLessons }: MultipleFiltersProps) => {
     const [filters, setFilters] = useState<FilterState>({

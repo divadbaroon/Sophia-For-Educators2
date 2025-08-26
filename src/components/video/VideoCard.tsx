@@ -1,11 +1,13 @@
 "use client"
 
 import React from 'react'
+
 import Image from 'next/image'
 import Link from 'next/link'
+
 import { MessageCircleCode } from 'lucide-react'
 
-import { VideoCardProps } from "@/types"
+import { VideoCardProps } from "./types"
 
 const VideoCard = ({
     // Original props

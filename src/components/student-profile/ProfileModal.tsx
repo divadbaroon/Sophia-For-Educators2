@@ -1,12 +1,8 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
+
 import { X } from "lucide-react"
 
-interface ProfileModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title: string
-  children: React.ReactNode
-}
+import { ProfileModalProps } from './types'
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ 
   isOpen, 

@@ -1,15 +1,10 @@
 "use client"
 
 import { useState } from "react"
+
 import Image from 'next/image'
 
-interface SingleDropdownProps {
-    label: string
-    options: string[]
-    selectedValue: string
-    onValueChange: (value: string) => void
-    placeholder?: string
-}
+import { SingleDropdownProps } from './types'
 
 const SingleDropdown = ({ label, options, selectedValue, onValueChange }: SingleDropdownProps) => {
     const [isOpen, setIsOpen] = useState(false)

@@ -1,18 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
+
 import Image from 'next/image'
 
-import DropdownList from './MultipleDropdownLists'
-import { ProfileModal } from './ProfileModal'
+import DropdownList from '../dropdown/MultipleDropdownLists'
+import { ProfileModal } from '../student-profile/ProfileModal'
 
-interface SharedHeaderProps {
-  subHeader: string
-  title: string
-  userImg?: string
-  onFiltersChange?: (filters: any) => void
-  availableLessons?: string[]  
-}
+import { SharedHeaderProps } from './types'
 
 const Header = ({ subHeader, title, userImg, onFiltersChange, availableLessons }: SharedHeaderProps) => {
   const [showViewModal, setShowViewModal] = useState(false)
