@@ -115,6 +115,17 @@ export interface SessionReplayData {
     total_test_cases: number
     created_at: string
   }>
+
+  emotionAnalysis: Array<{
+    segment_index: number
+    begin_time: number
+    end_time: number
+    text: string
+    prosody_emotions: Array<{ name: string; score: number }>
+    language_emotions: Array<{ name: string; score: number }>
+    burst_emotions: Array<{ name: string; score: number }>
+    elevenlabs_conversation_id: string
+  }>
 }
 
 export interface VideoCardProps {
