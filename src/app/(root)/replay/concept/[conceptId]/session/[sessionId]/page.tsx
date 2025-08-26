@@ -13,6 +13,8 @@ import { EmotionTab } from '@/components/tabs/emotion/EmotionTab'
 import { StatsTab } from '@/components/tabs/stats/StatsTab'
 
 import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData'
+import { SimulationProvider } from '@/lib/provider/replay-provider/ReplayProvider'
+
 import { SessionReplayData, VideoDetailsPageProps } from "@/types"
 
 const VideoDetailsPage = ({ params }: VideoDetailsPageProps) => {
@@ -65,63 +67,65 @@ const VideoDetailsPage = ({ params }: VideoDetailsPageProps) => {
   const { sessionInfo } = sessionData
 
   return (
-    <main className="wrapper page">
-      <SessionHeader conceptId={conceptId} sessionInfo={sessionInfo} />
+    <SimulationProvider initialSessionData={sessionData}>
+      <main className="wrapper page">
+        <SessionHeader conceptId={conceptId} sessionInfo={sessionInfo} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <VideoPlayer 
-          sessionData={sessionData} 
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <VideoPlayer 
+            sessionData={sessionData} 
+          />
 
-        <div className="lg:col-span-1">
-          <Tabs defaultValue="transcript" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="transcript" className="text-xs">Transcript</TabsTrigger>
-              <TabsTrigger value="code" className="text-xs">Progress</TabsTrigger>
-              <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
-              <TabsTrigger value="emotion" className="text-xs">Emotion</TabsTrigger>
-              <TabsTrigger value="stats" className="text-xs">Stats</TabsTrigger>
-            </TabsList>
+          <div className="lg:col-span-1">
+            <Tabs defaultValue="transcript" className="w-full">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="transcript" className="text-xs">Transcript</TabsTrigger>
+                <TabsTrigger value="code" className="text-xs">Progress</TabsTrigger>
+                <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
+                <TabsTrigger value="emotion" className="text-xs">Emotion</TabsTrigger>
+                <TabsTrigger value="stats" className="text-xs">Stats</TabsTrigger>
+              </TabsList>
 
-            <TranscriptTab 
-              messages={sessionData.messages} 
-              sessionStartTime={sessionInfo.started_at} 
-            />
-            
-            <CodeProgressTab 
-              codeSnapshots={sessionData.codeSnapshots}
-              testResults={sessionData.testResults}
-              codeErrors={sessionData.codeErrors}
-              taskProgress={sessionData.taskProgress}
-              sessionStartTime={sessionInfo.started_at}
-            />
-            
-            <ActivityTab 
-              navigationEvents={sessionData.navigationEvents}
-              sophiaButtonInteractions={sessionData.sophiaButtonInteractions}
-              sophiaHighlights={sessionData.sophiaHighlights}
-              userHighlights={sessionData.userHighlights}
-              strokeData={sessionData.strokeData}
-              sessionStartTime={sessionInfo.started_at}
-            />
+              <TranscriptTab 
+                messages={sessionData.messages} 
+                sessionStartTime={sessionInfo.started_at} 
+              />
+              
+              <CodeProgressTab 
+                codeSnapshots={sessionData.codeSnapshots}
+                testResults={sessionData.testResults}
+                codeErrors={sessionData.codeErrors}
+                taskProgress={sessionData.taskProgress}
+                sessionStartTime={sessionInfo.started_at}
+              />
+              
+              <ActivityTab 
+                navigationEvents={sessionData.navigationEvents}
+                sophiaButtonInteractions={sessionData.sophiaButtonInteractions}
+                sophiaHighlights={sessionData.sophiaHighlights}
+                userHighlights={sessionData.userHighlights}
+                strokeData={sessionData.strokeData}
+                sessionStartTime={sessionInfo.started_at}
+              />
 
-            <EmotionTab 
-              emotionAnalysis={sessionData.emotionAnalysis}
-              sophiaConversations={sessionData.sophiaConversations}
-              sessionStartTime={sessionInfo.started_at}
-            />
-            
-            <StatsTab 
-              sessionInfo={sessionInfo}
-              messages={sessionData.messages}
-              codeSnapshots={sessionData.codeSnapshots}
-              testResults={sessionData.testResults}
-              taskProgress={sessionData.taskProgress}
-            />
-          </Tabs>
+              <EmotionTab 
+                emotionAnalysis={sessionData.emotionAnalysis}
+                sophiaConversations={sessionData.sophiaConversations}
+                sessionStartTime={sessionInfo.started_at}
+              />
+              
+              <StatsTab 
+                sessionInfo={sessionInfo}
+                messages={sessionData.messages}
+                codeSnapshots={sessionData.codeSnapshots}
+                testResults={sessionData.testResults}
+                taskProgress={sessionData.taskProgress}
+              />
+            </Tabs>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </SimulationProvider>
   )
 }
 
