@@ -1,16 +1,19 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData'
-import { SessionReplayData, VideoDetailsPageProps } from "@/types"
 
 import { SessionHeader } from '@/components/SessionHeader'
 import { VideoPlayer } from '@/components/VideoPlayer'
-import { TranscriptTab } from '@/components/tabs/TranscriptTab'
-import { CodeProgressTab } from '@/components/tabs/CodeProgressTab'
-import { ActivityTab } from '@/components/tabs/ActivityTab'
-import { StatsTab } from '@/components/tabs/StatsTab'
+import { TranscriptTab } from '@/components/tabs/transcript/TranscriptTab'
+import { CodeProgressTab } from '@/components/tabs/progress/CodeProgressTab'
+import { ActivityTab } from '@/components/tabs/activity/ActivityTab'
+import { EmotionTab } from '@/components/tabs/emotion/EmotionTab'
+import { StatsTab } from '@/components/tabs/stats/StatsTab'
+
+import { fetchSessionReplayData } from '@/lib/actions/getAllSessionData'
+import { SessionReplayData, VideoDetailsPageProps } from "@/types"
 
 const VideoDetailsPage = ({ params }: VideoDetailsPageProps) => {
   const { conceptId, sessionId } = React.use(params)
@@ -72,10 +75,11 @@ const VideoDetailsPage = ({ params }: VideoDetailsPageProps) => {
 
         <div className="lg:col-span-1">
           <Tabs defaultValue="transcript" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="transcript" className="text-xs">Transcript</TabsTrigger>
-              <TabsTrigger value="code" className="text-xs">Code Progress</TabsTrigger>
+              <TabsTrigger value="code" className="text-xs">Progress</TabsTrigger>
               <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
+              <TabsTrigger value="emotion" className="text-xs">Emotion</TabsTrigger>
               <TabsTrigger value="stats" className="text-xs">Stats</TabsTrigger>
             </TabsList>
 
@@ -98,6 +102,12 @@ const VideoDetailsPage = ({ params }: VideoDetailsPageProps) => {
               sophiaHighlights={sessionData.sophiaHighlights}
               userHighlights={sessionData.userHighlights}
               strokeData={sessionData.strokeData}
+              sessionStartTime={sessionInfo.started_at}
+            />
+
+            <EmotionTab 
+              emotionAnalysis={sessionData.emotionAnalysis}
+              sophiaConversations={sessionData.sophiaConversations}
               sessionStartTime={sessionInfo.started_at}
             />
             
