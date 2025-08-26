@@ -2,7 +2,10 @@ import React from 'react'
 
 import { TabsContent } from "@/components/ui/tabs"
 
+import { useSimulation } from '@/lib/provider/replay-provider/ReplayProvider'
+
 import { formatTimestamp } from '@/lib/utils/formatters'
+import { getTimeFromStart } from '@/lib/utils/replay-provider/time-utils'
 
 import { CodeEvent, CodeProgressTabProps } from './types'
 
@@ -12,12 +15,22 @@ export const CodeProgressTab: React.FC<CodeProgressTabProps> = ({
   codeErrors, 
   sessionStartTime 
 }) => {
+  const { setCurrentTime } = useSimulation()
+
   const handleTimestampClick = (timestamp: string, rawTimestamp: string, eventType: string) => {
+    // Calculate the time offset from session start
+    const timeOffset = getTimeFromStart(rawTimestamp, sessionStartTime)
+    
+    // Jump to that time in the progress bar
+    setCurrentTime(timeOffset)
+    
     console.log('Code event timestamp clicked:', {
       formatted: timestamp,
       raw: rawTimestamp,
       eventType,
-      sessionStart: sessionStartTime
+      sessionStart: sessionStartTime,
+      calculatedOffset: timeOffset,
+      jumpingTo: `${timeOffset}ms`
     })
   }
 
@@ -55,7 +68,7 @@ export const CodeProgressTab: React.FC<CodeProgressTabProps> = ({
                 <span 
                   className="text-pink-500 font-medium cursor-pointer hover:text-pink-700 hover:underline"
                   onClick={() => handleTimestampClick(formattedTime, event.timestamp, event.type)}
-                  title="Click to log timestamp info"
+                  title="Click to jump to this time in the video"
                 >
                   [{formattedTime}]
                 </span>

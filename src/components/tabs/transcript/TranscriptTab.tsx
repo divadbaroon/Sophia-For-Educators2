@@ -2,16 +2,29 @@ import React from 'react'
 
 import { TabsContent } from "@/components/ui/tabs"
 
+import { useSimulation } from '@/lib/provider/replay-provider/ReplayProvider'
+
 import { formatTimestamp } from '@/lib/utils/formatters'
+import { getTimeFromStart } from '@/lib/utils/replay-provider/time-utils'
 
 import { TranscriptTabProps } from './types'
 
 export const TranscriptTab: React.FC<TranscriptTabProps> = ({ messages, sessionStartTime }) => {
+  const { setCurrentTime } = useSimulation()
+
   const handleTimestampClick = (timestamp: string, rawTimestamp: string) => {
+    // Calculate the time offset from session start
+    const timeOffset = getTimeFromStart(rawTimestamp, sessionStartTime)
+    
+    // Jump to that time in the progress bar
+    setCurrentTime(timeOffset)
+    
     console.log('Timestamp clicked:', {
       formatted: timestamp,
       raw: rawTimestamp,
-      sessionStart: sessionStartTime
+      sessionStart: sessionStartTime,
+      calculatedOffset: timeOffset,
+      jumpingTo: `${timeOffset}ms`
     })
   }
 
@@ -26,7 +39,7 @@ export const TranscriptTab: React.FC<TranscriptTabProps> = ({ messages, sessionS
                 <span 
                   className="text-pink-500 font-medium cursor-pointer hover:text-pink-700 hover:underline"
                   onClick={() => handleTimestampClick(formattedTime, message.created_at)}
-                  title="Click to log timestamp info"
+                  title="Click to jump to this time in the video"
                 >
                   [{formattedTime}]
                 </span>

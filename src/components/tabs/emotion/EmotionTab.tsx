@@ -2,69 +2,14 @@ import React from 'react'
 
 import { TabsContent } from "@/components/ui/tabs"
 
+import { useSimulation } from '@/lib/provider/replay-provider/ReplayProvider'
+
 import { formatTimestamp } from '@/lib/utils/formatters'
+import { getTimeFromStart } from '@/lib/utils/replay-provider/time-utils'
+
+import { emotionColors } from '@/constants'
 
 import { EmotionSegment, SophiaConversation, EmotionTabProps } from './types'
-
-// Emotion colors matching the original analysis tool
-const emotionColors: Record<string, string> = {
- joy: "#ffd600",
- interest: "#8fd1c4",
- excitement: "#fff974",
- amusement: "#febf52",
- determination: "#ff5c00",
- concentration: "#336cff",
- calmness: "#a9cce1",
- satisfaction: "#a6ddaf",
- contentment: "#e5c6b4",
- confidence: "#9a4cb6",
- admiration: "#ffc58f",
- adoration: "#ffc6cc",
- aestheticAppreciation: "#e2cbff",
- anger: "#b21816",
- annoyance: "#5f6b7c",
- anxiety: "#6e42cc",
- awe: "#7dabd3",
- awkwardness: "#d7d99d",
- boredom: "#8f99a6",
- contemplation: "#b0aeef",
- confusion: "#c66a26",
- contempt: "#76842d",
- craving: "#54591c",
- disappointment: "#006c7c",
- disapproval: "#4e591a",
- disgust: "#1a7a41",
- distress: "#c5f264",
- doubt: "#998644",
- ecstasy: "#ff48a4",
- embarrassment: "#63c653",
- empathicPain: "#ca5555",
- enthusiasm: "#ff9142",
- entrancement: "#7554d6",
- envy: "#1d4921",
- fear: "#d1c9ef",
- gratitude: "#f0d3b6",
- guilt: "#879aa1",
- horror: "#772e7a",
- love: "#f44f4c",
- neutral: "#879aa1",
- nostalgia: "#b087a1",
- pain: "#8c1d1d",
- pride: "#9a4cb6",
- realization: "#217aa8",
- relief: "#fe927a",
- romance: "#f0cc86",
- sadness: "#305575",
- sarcasm: "#7f53a4",
- sexualDesire: "#aa0d59",
- shame: "#8a6262",
- surprise: "#70e63a",
- surpriseNegative: "#319d3f",
- surprisePositive: "#7affff",
- sympathy: "#7f88e0",
- tiredness: "#757575",
- triumph: "#ec8132"
-}
 
 const getEmotionColor = (name: string): string => {
  // Clean the emotion name to match keys
@@ -139,14 +84,23 @@ export const EmotionTab: React.FC<EmotionTabProps> = ({
  sophiaConversations,
  sessionStartTime 
 }) => {
+ const { setCurrentTime } = useSimulation()
+
  const handleTimestampClick = (formattedTime: string, timestamp: string, conversationId: string) => {
+   // Calculate the time offset from session start
+   const timeOffset = getTimeFromStart(timestamp, sessionStartTime)
+   
+   // Jump to that time in the progress bar
+   setCurrentTime(timeOffset)
+   
    console.log('Emotion timestamp clicked:', {
      formatted: formattedTime,
      raw: timestamp,
      conversationId,
-     sessionStart: sessionStartTime
+     sessionStart: sessionStartTime,
+     calculatedOffset: timeOffset,
+     jumpingTo: `${timeOffset}ms`
    })
-   // Video seeking logic here
  }
 
  // Group segments by conversation
@@ -206,7 +160,7 @@ export const EmotionTab: React.FC<EmotionTabProps> = ({
                        <span 
                          className="text-pink-500 font-medium cursor-pointer hover:text-pink-700 hover:underline text-xs mt-1"
                          onClick={() => handleTimestampClick(formattedTime, emotionTimestamp, conversationId)}
-                         title="Click to seek to this time"
+                         title="Click to jump to this time in the video"
                        >
                          [{formattedTime}]
                        </span>
