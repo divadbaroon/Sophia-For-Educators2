@@ -1,27 +1,15 @@
 import React from 'react'
+
 import { TabsContent } from "@/components/ui/tabs"
+
 import { formatTimestamp } from '@/lib/utils/formatters'
 
-interface CodeEvent {
-  timestamp: string
-  type: string
-  description: string
-  details?: string
-}
-
-interface CodeProgressTabProps {
-  codeSnapshots: any[]
-  testResults: any[]
-  codeErrors: any[]
-  taskProgress: any[]
-  sessionStartTime: string
-}
+import { CodeEvent, CodeProgressTabProps } from './types'
 
 export const CodeProgressTab: React.FC<CodeProgressTabProps> = ({ 
   codeSnapshots, 
   testResults, 
   codeErrors, 
-  taskProgress, 
   sessionStartTime 
 }) => {
   const handleTimestampClick = (timestamp: string, rawTimestamp: string, eventType: string) => {

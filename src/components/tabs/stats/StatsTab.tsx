@@ -1,17 +1,10 @@
 import React from 'react'
+
 import { TabsContent } from "@/components/ui/tabs"
+
 import { formatDuration } from '@/lib/utils/formatters'
 
-interface StatsTabProps {
-  sessionInfo: {
-    duration_ms: number | null
-    status: string
-  }
-  messages: any[]
-  codeSnapshots: any[]
-  testResults: any[]
-  taskProgress: any[]
-}
+import { StatsTabProps } from './types'
 
 export const StatsTab: React.FC<StatsTabProps> = ({ 
   sessionInfo, 

@@ -1,22 +1,10 @@
 import React from 'react'
+
 import { TabsContent } from "@/components/ui/tabs"
+
 import { formatTimestamp } from '@/lib/utils/formatters'
 
-interface ActivityEvent {
-  timestamp: string
-  type: string
-  description: string
-  details?: string
-}
-
-interface ActivityTabProps {
-  navigationEvents: any[]
-  sophiaButtonInteractions: any[]
-  sophiaHighlights: any[]
-  userHighlights: any[]
-  strokeData: any[]
-  sessionStartTime: string
-}
+import { ActivityEvent, ActivityTabProps } from './types'
 
 export const ActivityTab: React.FC<ActivityTabProps> = ({ 
   navigationEvents,

@@ -1,16 +1,10 @@
 import React from 'react'
+
 import { TabsContent } from "@/components/ui/tabs"
+
 import { formatTimestamp } from '@/lib/utils/formatters'
 
-interface TranscriptTabProps {
-  messages: Array<{
-    id: string
-    created_at: string
-    role: string
-    content: string
-  }>
-  sessionStartTime: string
-}
+import { TranscriptTabProps } from './types'
 
 export const TranscriptTab: React.FC<TranscriptTabProps> = ({ messages, sessionStartTime }) => {
   const handleTimestampClick = (timestamp: string, rawTimestamp: string) => {
