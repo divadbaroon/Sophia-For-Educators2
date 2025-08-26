@@ -154,6 +154,24 @@ export async function fetchSessionReplayData(sessionId: string) {
       
     console.log('📊 Task progress:', taskProgress.data?.length || 0, 'entries')
 
+    console.log('🔍 Fetching emotion analysis...')
+    const emotionAnalysis = await supabase
+      .from('emotion_analysis_results')
+      .select(`
+        segment_index, 
+        begin_time, 
+        end_time, 
+        text, 
+        prosody_emotions, 
+        language_emotions, 
+        burst_emotions,
+        elevenlabs_conversation_id
+      `)
+      .in('elevenlabs_conversation_id', sophiaConversations.data?.map(c => c.conversation_id) || [])
+      .order('elevenlabs_conversation_id, segment_index')
+
+    console.log('😊 Emotion analysis:', emotionAnalysis.data?.length || 0, 'segments')
+
     // Check for any errors
     const errors = [
       codeSnapshots.error,
@@ -167,7 +185,8 @@ export async function fetchSessionReplayData(sessionId: string) {
       userHighlights.error,
       messages.error,
       codeErrors.error,
-      taskProgress.error
+      taskProgress.error,
+      emotionAnalysis.error
     ].filter(Boolean)
 
     if (errors.length > 0) {
@@ -192,7 +211,8 @@ export async function fetchSessionReplayData(sessionId: string) {
       userHighlights: userHighlights.data || [],
       messages: messages.data || [],
       codeErrors: codeErrors.data || [],
-      taskProgress: taskProgress.data || []
+      taskProgress: taskProgress.data || [],
+      emotionAnalysis: emotionAnalysis.data || []
     }
 
     const totalEvents = replayData.codeSnapshots.length + 
