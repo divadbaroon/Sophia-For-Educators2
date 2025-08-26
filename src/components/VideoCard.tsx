@@ -20,7 +20,6 @@ const VideoCard = ({
     duration,
     
     // New learning session props
-    profileId,
     sessionId,
     lessonId,  
     status,
@@ -50,11 +49,6 @@ const VideoCard = ({
         }
 
         return null
-    }
-
-    // Format lesson name for URL (spaces to dashes, lowercase)
-    const formatLessonForUrl = (lessonName: string) => {
-        return lessonName.toLowerCase().replace(/\s+/g, '-')
     }
 
     const sessionDuration = calculateDuration()
