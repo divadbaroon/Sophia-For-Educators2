@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Header from "@/components/Header"
-import VideoCard from '@/components/VideoCard'
+import Header from "@/components/header/Header"
+import VideoCard from '@/components/video/VideoCard'
 import { getAllLearningSessions } from '@/lib/actions/getAllLearningSessions'
 
 import { dummyCards } from "@/constants"

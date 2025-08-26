@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react'
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { SessionHeader } from '@/components/SessionHeader'
-import { VideoPlayer } from '@/components/VideoPlayer'
+import { SessionHeader } from '@/components/header/SessionHeader'
+import { VideoPlayer } from '@/components/video/VideoPlayer'
 import { TranscriptTab } from '@/components/tabs/transcript/TranscriptTab'
 import { CodeProgressTab } from '@/components/tabs/progress/CodeProgressTab'
 import { ActivityTab } from '@/components/tabs/activity/ActivityTab'
