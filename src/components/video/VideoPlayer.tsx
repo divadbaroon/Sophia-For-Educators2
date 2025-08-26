@@ -5,9 +5,6 @@ import { useState } from 'react'
 import { SimulationWorkspaceLayout } from "@/components/replay/replay-work-space/ReplayWorkSpace"
 import { SimulationProgressBar } from "@/components/replay/replay-playback-controller/ReplayPlaybackController"
 
-import { SimulationProvider } from '@/lib/provider/replay-provider/ReplayProvider'
-
-import { SessionReplayData } from "@/types"
 import { VideoPlayerProps } from './types'
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
@@ -32,13 +29,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           }}>
             <div className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden">
               <div className="relative h-full bg-gray-900 overflow-hidden">
-                <SimulationProvider initialSessionData={sessionData}>
-                  <div className="relative transform scale-50 origin-top-left" style={{ width: '200%', height: '200%' }}>
-                    <div style={{ height: '100%' }}>
-                      <SimulationWorkspaceLayout />
-                    </div>
+                <div className="relative transform scale-50 origin-top-left" style={{ width: '200%', height: '200%' }}>
+                  <div style={{ height: '100%' }}>
+                    <SimulationWorkspaceLayout />
                   </div>
-                </SimulationProvider>
+                </div>
               </div>
             </div>
           </div>
@@ -54,22 +49,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             <div className="absolute inset-0 bg-gray-900 rounded-lg overflow-hidden">
               {/* Simulation content area - bigger scale for modal */}
               <div className="relative h-full bg-gray-900 overflow-hidden">
-                <SimulationProvider initialSessionData={sessionData}>
-                  {/* Main workspace - scaled to 75% for better visibility */}
-                  <div className="relative transform scale-75 origin-top-left" style={{ width: '133%', height: '133%' }}>
-                    <div style={{ height: '100%' }}>
-                      <SimulationWorkspaceLayout />
-                    </div>
+                {/* Main workspace - scaled to 75% for better visibility */}
+                <div className="relative transform scale-75 origin-top-left" style={{ width: '133%', height: '133%' }}>
+                  <div style={{ height: '100%' }}>
+                    <SimulationWorkspaceLayout />
                   </div>
-                  
-                  {/* Progress bar - always visible in modal */}
-                  <div className="absolute bottom-0 left-0 right-0 z-50">
-                    <SimulationProgressBar 
-                      isExpanded={true} 
-                      onToggleExpand={toggleExpanded} 
-                    />
-                  </div>
-                </SimulationProvider>
+                </div>
+                
+                {/* Progress bar - always visible in modal */}
+                <div className="absolute bottom-0 left-0 right-0 z-50">
+                  <SimulationProgressBar 
+                    isExpanded={true} 
+                    onToggleExpand={toggleExpanded} 
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -92,28 +85,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         >
           {/* Simulation content area - scaled down to fit video dimensions */}
           <div className="relative h-full bg-gray-900 overflow-hidden">
-            <SimulationProvider initialSessionData={sessionData}>
-              {/* Main workspace */}
-              <div className="relative h-full transform scale-50 origin-top-left" style={{ width: '200%', height: '200%' }}>
-                <div className="h-full">
-                  <SimulationWorkspaceLayout />
-                </div>
+            {/* Main workspace */}
+            <div className="relative h-full transform scale-50 origin-top-left" style={{ width: '200%', height: '200%' }}>
+              <div className="h-full">
+                <SimulationWorkspaceLayout />
               </div>
-              
-              {/* Progress bar overlay - appears on hover */}
-              <div className={`absolute bottom-0 left-0 right-0 z-50 transition-all duration-300 ${
-                isHovered 
-                  ? 'opacity-100 translate-y-0' 
-                  : 'opacity-0 translate-y-2 pointer-events-none'
-              }`}>
-                <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
-                  <SimulationProgressBar 
-                    isExpanded={false} 
-                    onToggleExpand={toggleExpanded} 
-                  />
-                </div>
+            </div>
+            
+            {/* Progress bar overlay - appears on hover */}
+            <div className={`absolute bottom-0 left-0 right-0 z-50 transition-all duration-300 ${
+              isHovered 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-2 pointer-events-none'
+            }`}>
+              <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
+                <SimulationProgressBar 
+                  isExpanded={false} 
+                  onToggleExpand={toggleExpanded} 
+                />
               </div>
-            </SimulationProvider>
+            </div>
           </div>
         </div>
       </div>
