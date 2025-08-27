@@ -19,7 +19,7 @@ const page = () => {
         subHeader="" 
       />
       
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white -mt-2">
         <div className="w-full h-full px-4 sm:px-6 lg:px-8 py-8">
           {/* Main Content Card */}
           <Card className="w-full h-full">
