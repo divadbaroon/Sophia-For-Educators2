@@ -330,6 +330,7 @@
       @apply border border-gray-20 rounded-18 text-dark-100 placeholder:text-gray-100 py-2.5 px-4.5 focus:outline-pink-100 placeholder:font-medium text-base font-semibold;
     }
   }
+
   /* navbar */
   .navbar {
     @apply h-[90px] border-b border-gray-20 flex items-center;
@@ -337,8 +338,8 @@
     nav {
       @apply flex items-center justify-between max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 w-full;
 
-      a {
-        @apply flex items-center gap-0.5;
+      > div:first-child {
+        @apply flex items-center gap-8;
       }
 
       figure {
