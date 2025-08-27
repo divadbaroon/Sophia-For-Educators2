@@ -35,7 +35,7 @@ const Navbar = ({ user }: NavbarProps) => {
     : user
       ? [
           { name: "Configure", href: "/configuration" },
-          { name: "Browse", href: "/replays" },
+          { name: "Replay", href: "/replays" },
         ]
       : []
 
