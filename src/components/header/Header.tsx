@@ -61,7 +61,7 @@ const Header = ({ subHeader, title, userImg, onFiltersChange, availableLessons }
                     <Image src="/assets/icons/users.svg" 
                     alt="view" width={16} height={16} />
                     <span>
-                        View profiles
+                        View students
                     </span>
                 </button>
                 <div className="record">
@@ -71,7 +71,7 @@ const Header = ({ subHeader, title, userImg, onFiltersChange, availableLessons }
                     >
                         <Image src="/assets/icons/wand.svg" alt="generate" width={16} height={16}></Image>
                         <span>
-                            Generate profiles
+                            Generate students
                         </span>
                     </button>
                 </div>
