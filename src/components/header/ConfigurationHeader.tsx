@@ -54,16 +54,17 @@ const ConfigurationHeader = ({ subHeader, title, userImg }: ConfigurationHeaderP
             >
               <Image src="/assets/icons/users.svg" 
                 alt="view" width={16} height={16} />
-              <span>View profiles</span>
+              <span>View students</span>
             </button>
             <div className="record">
-              <button 
-                className="primary-btn"
-                onClick={() => setShowGenerateModal(true)}
-              >
-                <Image src="/assets/icons/wand.svg" alt="generate" width={16} height={16}></Image>
-                <span>Generate profiles</span>
-              </button>
+               <button 
+              onClick={handleViewProfileClick}
+              className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-full text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <Image src="/assets/icons/play.svg" 
+                alt="view" width={16} height={16} />
+              <span>View replays</span>
+            </button>
             </div>
           </aside>
         </section>
