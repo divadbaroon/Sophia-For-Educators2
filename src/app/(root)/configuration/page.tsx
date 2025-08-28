@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 
 import ConfigurationHeader from "@/components/header/ConfigurationHeader"
+import { AgentConfiguration } from "@/components/configuration/AgentConfiguration";
 
 const page = () => {
   const [activeTab, setActiveTab] = useState<"configuration" | "sessions" | "report">("configuration");
@@ -89,7 +90,7 @@ const page = () => {
             <CardContent className="flex-1">
               {/* Tab Content */}
               <div style={{ display: activeTab === "configuration" ? "block" : "none" }}>
-                <div className="text-center py-8">Configuration content goes here...</div>
+                <AgentConfiguration />
               </div>
               
               <div style={{ display: activeTab === "sessions" ? "block" : "none" }}>
