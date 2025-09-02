@@ -25,6 +25,13 @@ function read(): SavedTest[] {
   }
 }
 
+export function updateSavedTest(test: SavedTest): SavedTest[] {
+  const existing = read();
+  const updated = existing.map(t => t.id === test.id ? test : t);
+  write(updated);
+  return updated;
+}
+
 function write(tests: SavedTest[]) {
   if (!canUseStorage()) return;
   localStorage.setItem(KEY, JSON.stringify(tests));
