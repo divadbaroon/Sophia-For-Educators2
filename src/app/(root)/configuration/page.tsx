@@ -89,10 +89,7 @@ const page = () => {
             </CardHeader>
             <CardContent className="flex-1">
               {/* Tab Content */}
-              <div style={{ display: activeTab === "configuration" ? "block" : "none" }}>
-                <AgentConfiguration />
-              </div>
-              
+           
               <div style={{ display: activeTab === "sessions" ? "block" : "none" }}>
                 <div className="text-center py-8">Simulated testing content goes here...</div>
               </div>
