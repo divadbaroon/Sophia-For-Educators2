@@ -10,15 +10,17 @@ import { TestCreationModal } from "@/components/testCreation/TestCreationModal";
 
 import { Edit } from "lucide-react";
 
-import { useCreateTest } from "@/lib/hooks/tests/useAgentTesting";
+import { useCreateTest, useFetchTest, useUpdateTest } from "@/lib/hooks/tests/useAgentTesting";
 
 import {
   loadSavedTests,
-  // removeSavedTest, // optional if you want a delete
+  addSavedTest,
+  removeSavedTest,
+  updateSavedTest,
   type SavedTest,
 } from "@/lib/storage/tests";
 
-import { TestCreationProps } from "./types";
+import type { TestCreationProps } from "./types";
 
 export const TestCreation = ({
   agentInfo,
@@ -28,9 +30,13 @@ export const TestCreation = ({
   onRefresh,
 }: TestCreationProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  const [editingTestData, setEditingTestData] = useState<any>(null);
   const [savedTests, setSavedTests] = useState<SavedTest[]>([]);
 
   const { createTest, isCreating, error: createError } = useCreateTest();
+  const { fetchTest, isLoading: isFetchingTest } = useFetchTest();
+  const { updateTest, isUpdating, error: updateError } = useUpdateTest();
 
   useEffect(() => {
     setSavedTests(loadSavedTests());
@@ -42,17 +48,92 @@ export const TestCreation = ({
   };
 
   const handleTestSave = async (testData: any) => {
-    const created = await createTest({
+    const fullTestData = {
       ...testData,
       chatMessages: testData.chatMessages || [],
       dynamicVariables: testData.dynamicVariables || {},
-    });
+    };
 
-    if (created) {
-      setSavedTests(loadSavedTests());
-      setIsModalOpen(false);
+    if (editingTestId) {
+      // Update existing test
+      const updatedTest = await updateTest(editingTestId, fullTestData);
+      
+      if (updatedTest) {
+        // Update in localStorage
+        const updated: SavedTest = {
+          id: editingTestId,
+          title: testData.testName,
+          description: (testData.successCriteria || "").slice(0, 100) + "...",
+          createdAt: new Date().toISOString(),
+        };
+        
+        updateSavedTest(updated);
+        setSavedTests(loadSavedTests());
+        
+        setEditingTestId(null);
+        setEditingTestData(null);
+        setIsModalOpen(false);
+      }
+    } else {
+      // Create new test
+      const createdTest = await createTest(fullTestData);
+
+      if (createdTest) {
+        const saved: SavedTest = {
+          id: createdTest.id,
+          title: testData.testName,
+          description: (testData.successCriteria || "").slice(0, 100) + "...",
+          createdAt: new Date().toISOString(),
+        };
+
+        addSavedTest(saved);
+        setSavedTests(loadSavedTests());
+        setIsModalOpen(false);
+      }
     }
   };
+
+  const handleEditTest = async (testId: string) => {
+    console.log("Editing test:", testId);
+    
+    // Fetch the full test data
+    const testData = await fetchTest(testId);
+    
+    if (testData) {
+      // Transform ElevenLabs data back to our modal format
+      const transformedData = {
+        id: testData.id,
+        testName: testData.name,
+        successCriteria: testData.success_condition || testData.successCondition,
+        successExamples: (testData.success_examples || testData.successExamples || []).map((ex: any, idx: number) => ({
+          id: `success-${idx}`,
+          text: ex.response || ex.text || ""
+        })),
+        failureExamples: (testData.failure_examples || testData.failureExamples || []).map((ex: any, idx: number) => ({
+          id: `failure-${idx}`,
+          text: ex.response || ex.text || ""
+        })),
+        chatMessages: (testData.chat_history || testData.chatHistory || []).map((msg: any, idx: number) => ({
+          id: `msg-${idx}`,
+          type: msg.role === 'user' ? 'user' : 'agent',
+          text: msg.message || msg.text || ""
+        }))
+      };
+      
+      setEditingTestId(testId);
+      setEditingTestData(transformedData);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingTestId(null);
+    setEditingTestData(null);
+  };
+
+  const combinedError = createError || updateError;
+  const isAnyOperationLoading = isLoading || isCreating || isFetchingTest || isUpdating;
 
   return (
     <div className="flex h-full bg-background">
@@ -85,7 +166,7 @@ export const TestCreation = ({
         )}
       </div>
 
-      {/* Right Panel - Saved Tests */}
+      {/* Right Panel - Test Cases Display */}
       <div className="w-1/2 flex flex-col">
         <div className="p-4 border-b border-border bg-card -mt-6">
           <div className="flex items-center justify-between">
@@ -93,18 +174,36 @@ export const TestCreation = ({
             <Button
               className="bg-black text-white hover:bg-gray-800 cursor-pointer"
               onClick={() => setIsModalOpen(true)}
-              disabled={!agentInfo || isLoading || isCreating}
+              disabled={!agentInfo || isAnyOperationLoading}
             >
-              {isCreating ? "Creating Test..." : "Create a Test"}
+              {isCreating ? "Creating Test..." : isUpdating ? "Updating Test..." : "Create a Test"}
             </Button>
           </div>
         </div>
 
         {/* Error Display */}
-        {createError && (
+        {combinedError && (
           <div className="mx-4 mt-4">
             <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
-              <strong>Error creating test:</strong> {createError}
+              <strong>Error:</strong> {combinedError}
+            </div>
+          </div>
+        )}
+
+        {/* Loading indicator for fetching test */}
+        {isFetchingTest && (
+          <div className="mx-4 mt-4">
+            <div className="text-blue-600 text-sm bg-blue-50 p-3 rounded-lg border border-blue-200">
+              Loading test data for editing...
+            </div>
+          </div>
+        )}
+
+        {/* Loading indicator for updating test */}
+        {isUpdating && (
+          <div className="mx-4 mt-4">
+            <div className="text-blue-600 text-sm bg-blue-50 p-3 rounded-lg border border-blue-200">
+              Updating test...
             </div>
           </div>
         )}
@@ -112,16 +211,7 @@ export const TestCreation = ({
         {/* Saved Tests List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {savedTests.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-gray-600">
-              <p className="mb-3">No tests yet.</p>
-              <Button
-                className="bg-black text-white hover:bg-gray-800"
-                onClick={() => setIsModalOpen(true)}
-                disabled={!agentInfo || isLoading || isCreating}
-              >
-                Create your first test
-              </Button>
-            </div>
+            <div className="text-sm text-gray-500">No tests yet. Create your first test to see it here.</div>
           ) : (
             savedTests.map((t) => (
               <Card key={t.id} className="border border-gray-200">
@@ -137,22 +227,26 @@ export const TestCreation = ({
                           variant="outline"
                           size="sm"
                           className="cursor-pointer hover:bg-gray-100 bg-transparent text-foreground hover:text-foreground"
-                          onClick={() => console.log("Edit test:", t.id)}
+                          onClick={() => handleEditTest(t.id)}
+                          disabled={isAnyOperationLoading}
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           Edit Test Case
                         </Button>
-                        {/* Optional Delete:
+
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            removeSavedTest(t.id);
-                            setSavedTests(loadSavedTests());
+                            if (confirm("Remove this test from your device?")) {
+                              removeSavedTest(t.id);
+                              setSavedTests(loadSavedTests());
+                            }
                           }}
+                          disabled={isAnyOperationLoading}
                         >
                           Delete
-                        </Button> */}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -166,9 +260,10 @@ export const TestCreation = ({
       {/* Test Creation Modal */}
       <TestCreationModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
         onSave={handleTestSave}
         agentFirstMessage={agentInfo?.first_message}
+        initialData={editingTestData}
       />
     </div>
   );
