@@ -1,133 +1,50 @@
 import { useState, useEffect } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
-import { Settings, Save, Edit, RefreshCw } from "lucide-react";
+import { Settings, Save, Edit } from "lucide-react";
 
-interface AgentInfo {
-  agent_id: string;
-  name: string;
-  prompt: string;
-  first_message: string;
-  voice_id: string;
-}
+import { AgentConfigurationProps } from "./types";
 
-export function AgentConfiguration() {
-  // Basic state
-  const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export function AgentConfiguration({ 
+  agentInfo, 
+  isLoading, 
+  isSaving, 
+  onUpdateConfig, 
+  onRefresh 
+}: AgentConfigurationProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
-  // Form state
   const [editedName, setEditedName] = useState("");
   const [editedPrompt, setEditedPrompt] = useState("");
   const [editedFirstMessage, setEditedFirstMessage] = useState("");
-  const [editedVoiceId, setEditedVoiceId] = useState("");
 
-  // Fetch agent configuration
-  const fetchAgentConfig = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log('🔄 Fetching agent configuration...');
-      
-      const response = await fetch('/api/elevenlabs/get-agent-config', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch agent config');
-      }
-
-      const data = await response.json();
-      const agentData: AgentInfo = {
-        agent_id: data.agent_id,
-        name: data.name,
-        prompt: data.conversation_config.agent.prompt.prompt,
-        first_message: data.conversation_config.agent.first_message || "",
-        voice_id: data.conversation_config.tts.voice_id || ""
-      };
-
-      setAgentInfo(agentData);
-      setEditedName(agentData.name);
-      setEditedPrompt(agentData.prompt);
-      setEditedFirstMessage(agentData.first_message);
-      setEditedVoiceId(agentData.voice_id);
-    
-      
-      console.log('✅ Agent configuration fetched successfully');
-
-    } catch (error) {
-      console.error('❌ Error fetching agent config:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch agent configuration');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (agentInfo) {
+      setEditedName(agentInfo.name);
+      setEditedPrompt(agentInfo.prompt);
+      setEditedFirstMessage(agentInfo.first_message);
     }
-  };
+  }, [agentInfo]);
 
-  // Update agent configuration
-  const updateAgentConfig = async () => {
+  const handleUpdateConfig = async () => {
     if (!agentInfo) return;
 
-    setIsSaving(true);
-    setError(null);
+    const updatedAgentData = await onUpdateConfig(
+      editedName,
+      editedPrompt,
+      editedFirstMessage
+    );
 
-    try {
-      console.log('💾 Updating agent configuration...');
-      
-      const response = await fetch('/api/elevenlabs/update-agent-config', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: editedName,
-          prompt: editedPrompt,
-          first_message: editedFirstMessage,
-          voice_id: editedVoiceId
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update agent config');
-      }
-
-      const data = await response.json();
-      const updatedAgentData: AgentInfo = {
-        agent_id: data.agent_id,
-        name: data.name,
-        prompt: data.conversation_config.agent.prompt.prompt,
-        first_message: data.conversation_config.agent.first_message || "",
-        voice_id: data.conversation_config.tts.voice_id || ""
-      };
-
-      setAgentInfo(updatedAgentData);
+    if (updatedAgentData) {
       setIsEditing(false);
-
-      console.log('✅ Agent configuration updated successfully');
-
-    } catch (error) {
-      console.error('❌ Error updating agent config:', error);
-      setError(error instanceof Error ? error.message : 'Failed to update agent configuration');
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  // Event handlers
   const handleEdit = () => {
     setIsEditing(true);
-    setError(null);
   };
 
   const handleCancel = () => {
@@ -135,20 +52,13 @@ export function AgentConfiguration() {
       setEditedName(agentInfo.name);
       setEditedPrompt(agentInfo.prompt);
       setEditedFirstMessage(agentInfo.first_message);
-      setEditedVoiceId(agentInfo.voice_id);
     }
     setIsEditing(false);
-    setError(null);
   };
 
   const handleSave = () => {
-    updateAgentConfig();
+    handleUpdateConfig();
   };
-
-  // Load agent config on component mount
-  useEffect(() => {
-    fetchAgentConfig();
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -160,17 +70,6 @@ export function AgentConfiguration() {
               Agent Configuration
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Button
-                onClick={fetchAgentConfig}
-                disabled={isLoading}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                {isLoading ? 'Loading...' : 'Refresh'}
-              </Button>
-              
               {!isEditing ? (
                 <>
                   <Button
@@ -209,12 +108,6 @@ export function AgentConfiguration() {
           </div>
         </CardHeader>
         <CardContent>
-          {error && (
-            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg mb-4">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
-
           <hr className="border-gray-200 mb-6" />
 
           {isLoading ? (
@@ -273,7 +166,7 @@ export function AgentConfiguration() {
             <div className="text-center py-8 text-gray-500">
               <p>Failed to load agent configuration.</p>
               <Button
-                onClick={fetchAgentConfig}
+                onClick={onRefresh}
                 variant="outline"
                 size="sm"
                 className="mt-2"
