@@ -1,6 +1,21 @@
 import { useState } from 'react';
+import {
+  addSavedTest,
+  setLastCreatedTestId,
+  type SavedTest,
+} from '@/lib/storage/tests'; 
 
-import { TestData, CreatedTest } from './types'
+interface TestData {
+  testName: string;
+  successCriteria: string;
+  successExamples: Array<{ id: string; text: string }>;
+  failureExamples: Array<{ id: string; text: string }>;
+  chatMessages: Array<{ id: string; type: 'user' | 'agent'; text: string }>;
+  dynamicVariables?: Record<string, any>;
+  toolCallParameters?: Record<string, any>;
+}
+
+interface CreatedTest { id: string; }
 
 export function useCreateTest() {
   const [isCreating, setIsCreating] = useState(false);
@@ -18,15 +33,21 @@ export function useCreateTest() {
       });
 
       const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || 'Failed to create test');
 
-      if (!response.ok) {
-        throw new Error(data?.error || 'Failed to create test');
-      }
+      // ✅ Persist locally
+      const saved: SavedTest = {
+        id: data.id, // ElevenLabs ID
+        title: testData.testName,
+        description: testData.successCriteria.slice(0, 140) + '…',
+        createdAt: new Date().toISOString(),
+      };
+      addSavedTest(saved);
+      setLastCreatedTestId(data.id);
 
       return data as CreatedTest;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to create test';
-      setError(msg);
+      setError(err instanceof Error ? err.message : 'Failed to create test');
       return null;
     } finally {
       setIsCreating(false);
