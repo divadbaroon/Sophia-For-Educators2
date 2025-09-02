@@ -135,7 +135,7 @@ const Navbar = ({ user }: NavbarProps) => {
             </Button>
             <Link
               href="/sign-up"
-              className="bg-pink-100 text-white px-6 py-2 rounded-4xl hover:bg-pink-100/80 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm"
+              className="bg-blue-600 text-white px-6 py-2 rounded-4xl hover:bg-blue-100/80 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm"
             >
               Get Started
             </Link>

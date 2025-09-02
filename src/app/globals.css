@@ -927,6 +927,10 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --color-success: oklch(0.74 0.19 145);
+  --color-warning: oklch(0.83 0.20 85);
+  --color-error: oklch(0.577 0.245 27.325); /* reuse your destructive */
+  --color-neutral: var(--muted-foreground);
 }
 
 .dark {
@@ -961,6 +965,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --color-success: oklch(0.72 0.21 145);
+  --color-warning: oklch(0.78 0.20 85);
+  --color-error: oklch(0.704 0.191 22.216); /* reuse your dark destructive */
+  --color-neutral: var(--muted-foreground);
 }
 
 @layer base {
