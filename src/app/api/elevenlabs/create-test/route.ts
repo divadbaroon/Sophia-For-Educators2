@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const chat_history = (chatMessages as any[]).map((m) => ({
-      role: m.type === 'user' ? 'user' : 'assistant',
+      role: m.type === 'user' ? 'user' : 'agent',
       message: m.text ?? '',
       time_in_call_secs: 1,
     }));
