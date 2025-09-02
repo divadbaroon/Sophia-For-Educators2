@@ -1,112 +1,180 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2, Info, User, Bot } from "lucide-react";
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+interface Example {
+  id: string;
+  text: string;
+}
 
-import { Plus, Trash2, Info, User, Bot } from "lucide-react"
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'agent';
+  text: string;
+}
 
-import { TestCreationModalProps, Example, ChatMessage } from "./types"
+interface InitialData {
+  id?: string;
+  testName: string;
+  successCriteria: string;
+  successExamples: Example[];
+  failureExamples: Example[];
+  chatMessages: ChatMessage[];
+}
 
-export function TestCreationModal({ isOpen, onClose, onSave, agentFirstMessage }: TestCreationModalProps) {
-  const [testName, setTestName] = useState("")
-  const [successCriteria, setSuccessCriteria] = useState("")
-  const [successExamples, setSuccessExamples] = useState<Example[]>([])
-  const [failureExamples, setFailureExamples] = useState<Example[]>([])
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    { id: "1", type: "agent", text: agentFirstMessage || "Hello, how can I help you today?" }
-  ])
+interface TestCreationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (testData: any) => void;
+  agentFirstMessage?: string;
+  initialData?: InitialData;
+}
 
-  // Scroll container for messages
-  const messagesScrollRef = useRef<HTMLDivElement | null>(null)
+export function TestCreationModal({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  agentFirstMessage, 
+  initialData 
+}: TestCreationModalProps) {
+  const [testName, setTestName] = useState("");
+  const [successCriteria, setSuccessCriteria] = useState("");
+  const [successExamples, setSuccessExamples] = useState<Example[]>([]);
+  const [failureExamples, setFailureExamples] = useState<Example[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  const messagesScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Initialize form data when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialData) {
+      // Edit mode - populate with existing data
+      setTestName(initialData.testName || "");
+      setSuccessCriteria(initialData.successCriteria || "");
+      setSuccessExamples(initialData.successExamples || []);
+      setFailureExamples(initialData.failureExamples || []);
+      setChatMessages(
+        initialData.chatMessages?.length > 0 
+          ? initialData.chatMessages 
+          : [{ id: "1", type: "agent", text: agentFirstMessage || "Hello, how can I help you today?" }]
+      );
+    } else {
+      // Create mode - empty form with default first message
+      setTestName("");
+      setSuccessCriteria("");
+      setSuccessExamples([]);
+      setFailureExamples([]);
+      setChatMessages([{ 
+        id: "1", 
+        type: "agent", 
+        text: agentFirstMessage || "Hello, how can I help you today?" 
+      }]);
+    }
+  }, [isOpen, initialData, agentFirstMessage]);
+
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (messagesScrollRef.current) {
-      messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight
+      messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
     }
-  }, [chatMessages])
+  }, [chatMessages]);
 
+  // Success Examples handlers
   const addSuccessExample = () => {
-    setSuccessExamples([...successExamples, { id: Date.now().toString(), text: "" }])
-  }
+    setSuccessExamples([...successExamples, { id: Date.now().toString(), text: "" }]);
+  };
 
   const removeSuccessExample = (id: string) => {
-    setSuccessExamples(successExamples.filter(ex => ex.id !== id))
-  }
+    setSuccessExamples(successExamples.filter(ex => ex.id !== id));
+  };
 
   const updateSuccessExample = (id: string, text: string) => {
-    setSuccessExamples(successExamples.map(ex => ex.id === id ? { ...ex, text } : ex))
-  }
+    setSuccessExamples(successExamples.map(ex => ex.id === id ? { ...ex, text } : ex));
+  };
 
+  // Failure Examples handlers
   const addFailureExample = () => {
-    setFailureExamples([...failureExamples, { id: Date.now().toString(), text: "" }])
-  }
+    setFailureExamples([...failureExamples, { id: Date.now().toString(), text: "" }]);
+  };
 
   const removeFailureExample = (id: string) => {
-    setFailureExamples(failureExamples.filter(ex => ex.id !== id))
-  }
+    setFailureExamples(failureExamples.filter(ex => ex.id !== id));
+  };
 
   const updateFailureExample = (id: string, text: string) => {
-    setFailureExamples(failureExamples.map(ex => ex.id === id ? { ...ex, text } : ex))
-  }
+    setFailureExamples(failureExamples.map(ex => ex.id === id ? { ...ex, text } : ex));
+  };
 
+  // Chat Messages handlers
   const addUserMessage = () => {
     setChatMessages([...chatMessages, { 
       id: Date.now().toString(), 
       type: "user", 
       text: "" 
-    }])
-  }
+    }]);
+  };
 
   const addAgentMessage = () => {
     setChatMessages([...chatMessages, { 
       id: Date.now().toString(), 
       type: "agent", 
       text: "" 
-    }])
-  }
+    }]);
+  };
 
   const updateChatMessage = (id: string, text: string) => {
-    setChatMessages(chatMessages.map(msg => 
-      msg.id === id ? { ...msg, text } : msg
-    ))
-  }
+    setChatMessages(chatMessages.map(msg => msg.id === id ? { ...msg, text } : msg));
+  };
 
-  const removeChatMessage = (id: string) => {
-    setChatMessages(chatMessages.filter(msg => msg.id !== id))
-  }
+  const removeLastMessage = () => {
+    if (chatMessages.length > 1) {
+      setChatMessages(chatMessages.slice(0, -1));
+    }
+  };
 
   const handleSave = () => {
     const testData = {
+      id: initialData?.id, // Include ID if editing
       testName,
       successCriteria,
       successExamples,
       failureExamples,
-      // ✅ include chat history so the API route has a non-empty required array
       chatMessages
-    }
-    onSave(testData)
-    onClose()
-  }
+    };
+    onSave(testData);
+    onClose();
+  };
 
   const handleClose = () => {
-    // Reset form
-    setTestName("")
-    setSuccessCriteria("")
-    setSuccessExamples([])
-    setFailureExamples([])
-    setChatMessages([{ id: "1", type: "agent", text: agentFirstMessage || "Hello, how can I help you today?" }])
-    onClose()
-  }
+    onClose();
+  };
+
+  const isEditMode = !!initialData;
+  
+  // Form validation
+  const isFormValid = 
+    testName.trim() && 
+    successCriteria.trim() &&
+    successExamples.length > 0 &&
+    failureExamples.length > 0 &&
+    successExamples.some(ex => ex.text.trim()) &&
+    failureExamples.some(ex => ex.text.trim());
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="min-w-[95vh] min-h-[55vh] overflow-y-auto w-[155vw]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2" />
+          <DialogTitle>
+            {isEditMode ? "Edit Test" : "Create Test"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -227,34 +295,50 @@ export function TestCreationModal({ isOpen, onClose, onSave, agentFirstMessage }
             <div className="h-full min-h-[500px] bg-gray-50 rounded-lg border border-gray-200 flex flex-col">
               {/* Chat Messages Area */}
               <div className="flex-1 p-4">
-                {/* Scrollable messages container */}
                 <div
                   ref={messagesScrollRef}
                   className="max-h-[420px] overflow-y-auto pr-1"
                 >
-                  {/* Render all chat messages */}
                   {chatMessages.map((message, index) => (
-                    <div key={message.id} className={`mb-4 ${message.type === 'user' ? 'flex justify-end' : 'flex justify-start'}`}>
-                      <div className={`max-w-sm ${message.type === 'user' ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200'} rounded-full px-6 py-3 shadow-sm`}>
+                    <div 
+                      key={message.id} 
+                      className={`mb-4 ${message.type === 'user' ? 'flex justify-end' : 'flex justify-start'}`}
+                    >
+                      <div 
+                        className={`max-w-sm ${
+                          message.type === 'user' 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-white border border-gray-200'
+                        } rounded-full px-6 py-3 shadow-sm`}
+                      >
                         {message.text ? (
-                          <p className={`text-sm ${index > 0 ? 'cursor-pointer' : ''}`} onClick={() => {
-                            if (index > 0) {
-                              const newText = prompt("Edit message:", message.text)
-                              if (newText !== null) updateChatMessage(message.id, newText)
-                            }
-                          }}>
+                          <p 
+                            className={`text-sm ${index > 0 ? 'cursor-pointer' : ''}`}
+                            onClick={() => {
+                              if (index > 0) {
+                                const newText = prompt("Edit message:", message.text);
+                                if (newText !== null) {
+                                  updateChatMessage(message.id, newText);
+                                }
+                              }
+                            }}
+                          >
                             {message.text}
                           </p>
                         ) : (
                           <input
                             type="text"
                             placeholder={`Enter ${message.type} message...`}
-                            className={`text-sm bg-transparent border-none outline-none w-full ${message.type === 'user' ? 'text-white placeholder-blue-200' : 'text-gray-900 placeholder-gray-400'}`}
+                            className={`text-sm bg-transparent border-none outline-none w-full ${
+                              message.type === 'user' 
+                                ? 'text-white placeholder-blue-200' 
+                                : 'text-gray-900 placeholder-gray-400'
+                            }`}
                             onBlur={(e) => updateChatMessage(message.id, e.target.value)}
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
-                                updateChatMessage(message.id, e.currentTarget.value)
-                                e.currentTarget.blur()
+                                updateChatMessage(message.id, e.currentTarget.value);
+                                e.currentTarget.blur();
                               }
                             }}
                             autoFocus
@@ -265,7 +349,7 @@ export function TestCreationModal({ isOpen, onClose, onSave, agentFirstMessage }
                   ))}
                 </div>
 
-                {/* Chat Controls - Under the last message */}
+                {/* Chat Controls */}
                 {chatMessages.length > 0 && (
                   <div
                     className={`flex items-center gap-1 mt-2 ${
@@ -291,10 +375,12 @@ export function TestCreationModal({ isOpen, onClose, onSave, agentFirstMessage }
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button variant="ghost" size="sm" className="p-1 hover:bg-gray-100" onClick={() => {
-                      if (!chatMessages.length) return
-                      setChatMessages((prev) => prev.slice(0, -1))
-                    }}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="p-1 hover:bg-gray-100"
+                      onClick={removeLastMessage}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -323,20 +409,13 @@ export function TestCreationModal({ isOpen, onClose, onSave, agentFirstMessage }
           </Button>
           <Button 
             onClick={handleSave}
-            disabled={
-              !testName.trim() || 
-              !successCriteria.trim() ||
-              successExamples.length === 0 ||
-              failureExamples.length === 0 ||
-              !successExamples.some(example => example.text.trim()) ||
-              !failureExamples.some(example => example.text.trim())
-            }
+            disabled={!isFormValid}
             className="bg-gray-900 hover:bg-gray-800"
           >
-            Save Test
+            {isEditMode ? 'Update Test' : 'Save Test'}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
