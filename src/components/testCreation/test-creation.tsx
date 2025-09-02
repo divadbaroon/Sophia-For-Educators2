@@ -22,6 +22,20 @@ import {
 
 import type { TestCreationProps } from "./types";
 
+// import the AgentResponse type from your storage file
+import type { AgentResponse } from "@/lib/storage/tests";
+
+// define the modal’s message shape with literal unions
+type ChatMessage = { type: "user" | "agent"; text: string };
+
+// map -> AgentResponse[]
+function mapChatMessagesToConversation(chatMessages: ChatMessage[] | undefined): AgentResponse[] {
+  const msgs = Array.isArray(chatMessages) ? chatMessages : [];
+  return msgs.map<AgentResponse>((m) => {
+    const role: AgentResponse["role"] = m.type === "user" ? "user" : "agent";
+    return { role, message: m.text ?? "" };
+  });
+}
 export const TestCreation = ({
   agentInfo,
   isLoading,
@@ -54,28 +68,30 @@ export const TestCreation = ({
       dynamicVariables: testData.dynamicVariables || {},
     };
 
+    // Build the local conversation snapshot from the modal’s chatMessages
+    const conversation = mapChatMessagesToConversation(fullTestData.chatMessages);
+
     if (editingTestId) {
-      // Update existing test
+      // Update existing test (remote)
       const updatedTest = await updateTest(editingTestId, fullTestData);
-      
+
       if (updatedTest) {
-        // Update in localStorage
-        const updated: SavedTest = {
+        // Update in localStorage (MERGE: don't wipe existing fields)
+        updateSavedTest({
           id: editingTestId,
           title: testData.testName,
           description: (testData.successCriteria || "").slice(0, 100) + "...",
           createdAt: new Date().toISOString(),
-        };
-        
-        updateSavedTest(updated);
+          conversation, // <— store the conversation history with the saved test
+        });
+
         setSavedTests(loadSavedTests());
-        
         setEditingTestId(null);
         setEditingTestData(null);
         setIsModalOpen(false);
       }
     } else {
-      // Create new test
+      // Create new test (remote)
       const createdTest = await createTest(fullTestData);
 
       if (createdTest) {
@@ -84,6 +100,7 @@ export const TestCreation = ({
           title: testData.testName,
           description: (testData.successCriteria || "").slice(0, 100) + "...",
           createdAt: new Date().toISOString(),
+          conversation, // <— store the conversation history with the saved test
         };
 
         addSavedTest(saved);
@@ -95,31 +112,31 @@ export const TestCreation = ({
 
   const handleEditTest = async (testId: string) => {
     console.log("Editing test:", testId);
-    
-    // Fetch the full test data
+
+    // Fetch the full test data from ElevenLabs
     const testData = await fetchTest(testId);
-    
+
     if (testData) {
-      // Transform ElevenLabs data back to our modal format
+      // Transform ElevenLabs payload -> modal format
       const transformedData = {
         id: testData.id,
         testName: testData.name,
         successCriteria: testData.success_condition || testData.successCondition,
         successExamples: (testData.success_examples || testData.successExamples || []).map((ex: any, idx: number) => ({
           id: `success-${idx}`,
-          text: ex.response || ex.text || ""
+          text: ex.response || ex.text || "",
         })),
         failureExamples: (testData.failure_examples || testData.failureExamples || []).map((ex: any, idx: number) => ({
           id: `failure-${idx}`,
-          text: ex.response || ex.text || ""
+          text: ex.response || ex.text || "",
         })),
         chatMessages: (testData.chat_history || testData.chatHistory || []).map((msg: any, idx: number) => ({
           id: `msg-${idx}`,
-          type: msg.role === 'user' ? 'user' : 'agent',
-          text: msg.message || msg.text || ""
-        }))
+          type: msg.role === "user" ? "user" : "agent",
+          text: msg.message || msg.text || "",
+        })),
       };
-      
+
       setEditingTestId(testId);
       setEditingTestData(transformedData);
       setIsModalOpen(true);
@@ -222,6 +239,14 @@ export const TestCreation = ({
                         {t.title}
                       </CardTitle>
                       <p className="text-sm text-gray-600 mb-3">{t.description}</p>
+
+                      {/* Optional: show a tiny hint if conversation is saved */}
+                      {Array.isArray(t.conversation) && t.conversation.length > 0 && (
+                        <p className="text-xs text-gray-500 mb-2">
+                          Saved conversation turns: {t.conversation.length}
+                        </p>
+                      )}
+
                       <div className="flex gap-2">
                         <Button
                           variant="outline"

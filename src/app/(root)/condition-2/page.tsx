@@ -48,60 +48,62 @@ const ConditionTwoPage = () => {
   }
 
   const handleRunTests = async () => {
-    if (!agentInfo?.agent_id) {
-      console.error('No agent ID available');
-      return;
-    }
-
-    // Get saved test IDs from localStorage
-    const savedTests = loadSavedTests();
-    const testIds = savedTests.map(test => test.id);
-
-    if (testIds.length === 0) {
-      console.error('No tests available to run');
-      // You might want to show a user-friendly message here
-      return;
-    }
-
-    setActiveTab("validation")
-    setIsRunningTests(true)
-    setCurrentStep(0)
-    setTestResults(null)
-
-    try {
-      // Step 1: Setting up test cases
-      setCurrentStep(0)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Step 2: Running test cases and awaiting completion
-      setCurrentStep(1)
-      console.log('🚀 Starting test execution and awaiting results...');
-      
-      const runData = {
-        agentId: agentInfo.agent_id,
-        testIds: testIds
-        // Tests will run against the agent's current saved configuration
-      };
-
-      // Await the complete test results - no polling needed
-      const testRunResponse = await runTests(runData);
-      
-      if (testRunResponse) {
-        // Step 3: Processing and displaying results
-        setCurrentStep(2)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        
-        // Use the complete results directly
-        setTestResults(testRunResponse);
-        console.log('📊 All test results received and processed');
-        setTestsRun(true);
-      }
-    } catch (error) {
-      console.error('❌ Test execution failed:', error);
-    } finally {
-      setIsRunningTests(false);
-    }
+  if (!agentInfo?.agent_id) {
+    console.error('No agent ID available');
+    return;
   }
+
+  // Get saved test IDs from localStorage
+  const savedTests = loadSavedTests();
+  const testIds = savedTests.map(test => test.id);
+
+  if (testIds.length === 0) {
+    console.error('No tests available to run');
+    // You might want to show a user-friendly message here
+    return;
+  }
+
+  setActiveTab("validation");
+  setIsRunningTests(true);
+  setCurrentStep(0);
+  setTestResults(null);
+
+  try {
+    // Step 1: Setting up test cases
+    setCurrentStep(0);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Step 2: Running test cases and awaiting completion
+    setCurrentStep(1);
+    console.log('🚀 Starting test execution and awaiting results...');
+    
+    const runData = {
+      agentId: agentInfo.agent_id,
+      testIds: testIds
+      // Tests will run against the agent's current saved configuration
+    };
+
+    // This will now poll until completion or until agent_responses are available
+    const testRunResponse = await runTests(runData);
+    
+    if (testRunResponse) {
+      // Step 3: Processing and displaying results
+      setCurrentStep(2);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Log the complete results for debugging
+      console.log('📊 Complete test results:', JSON.stringify(testRunResponse, null, 2));
+      
+      setTestResults(testRunResponse);
+      console.log('📊 All test results received and processed');
+      setTestsRun(true);
+    }
+  } catch (error) {
+    console.error('❌ Test execution failed:', error);
+  } finally {
+    setIsRunningTests(false);
+  }
+};
 
   useEffect(() => {
     handleFetchConfig()

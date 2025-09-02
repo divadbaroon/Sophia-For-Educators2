@@ -25,6 +25,27 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 
+type AgentResponse = {
+  role: "user" | "agent" | "tool";
+  message?: string | null;
+  original_message?: string | null;
+  time_in_call_secs?: number | null;
+  source_medium?: string | null;
+  tool_calls?: any[] | null;
+  tool_results?: any[] | null;
+  feedback?: { score?: string; time_in_call_secs?: number } | null;
+  llm_override?: string | null;
+  conversation_turn_metrics?: any | null;
+  rag_retrieval_info?: {
+    chunks?: Array<{ document_id?: string; chunk_id?: string; vector_distance?: number }>;
+    embedding_model?: string;
+    retrieval_query?: string;
+    rag_latency_secs?: number;
+  } | null;
+  interrupted?: boolean;
+  llm_usage?: any | null;
+};
+
 interface FeedbackItem {
   id: string
   severity: "error" | "warning" | "success" | "info"
@@ -47,7 +68,7 @@ interface FeedbackItem {
     explanation: string
   }
   // Add these new fields for real test data
-  conversation?: any[]
+  conversation?: AgentResponse[];
   testMetadata?: {
     testId: string
     status: string
@@ -118,7 +139,7 @@ export function FeedbackPanel({
 }: FeedbackPanelProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [selectedProblem, setSelectedProblem] = useState<FeedbackItem | null>(null)
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]))
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview", "conversation"]));
   const [isEditingChange, setIsEditingChange] = useState(false)
   const [editedChange, setEditedChange] = useState("")
   const [showOriginal, setShowOriginal] = useState(false)
@@ -513,16 +534,6 @@ export function FeedbackPanel({
                         {selectedProblem.severity === 'success' ? 'PASSED' : 'FAILED'}
                       </span>
                     </div>
-                    
-                    {selectedProblem.testMetadata && (
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <div>Test ID: {selectedProblem.testMetadata.testId}</div>
-                        <div>Run ID: {selectedProblem.testMetadata.runId}</div>
-                        {selectedProblem.testMetadata.lastUpdated && (
-                          <div>Last Updated: {new Date(selectedProblem.testMetadata.lastUpdated * 1000).toLocaleString()}</div>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Rationale */}
@@ -534,55 +545,42 @@ export function FeedbackPanel({
                       </p>
                     </div>
                   </div>
-
-                  {/* Detailed Evidence if available */}
-                  {selectedProblem.evidence && selectedProblem.evidence.trim() && (
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Detailed Evidence:</h4>
-                      <div className="p-3 bg-card border border-border rounded">
-                        <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {selectedProblem.evidence}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
           )}
 
-          {condition === "2" && (
-            <Collapsible open={expandedSections.has("conversation")} onOpenChange={() => toggleSection("conversation")}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
-                    expandedSections.has("conversation")
-                      ? "bg-muted/30 hover:bg-muted/30 border-border/30"
-                      : "hover:bg-muted/50 hover:border-border",
-                  )}
-                >
-                  Conversation
-                  {expandedSections.has("conversation") ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-3">
-                <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
-                  {selectedProblem?.conversation && selectedProblem.conversation.length > 0 ? 
-                    renderConversation(selectedProblem.conversation) :
-                    <div className="text-center text-muted-foreground py-4">
-                      No conversation data available for this test
-                    </div>
-                  }
-                </div>
-              </CollapsibleContent>
+          <Collapsible open={expandedSections.has("conversation")} onOpenChange={() => toggleSection("conversation")}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
+                  expandedSections.has("conversation")
+                    ? "bg-muted/30 hover:bg-muted/30 border-border/30"
+                    : "hover:bg-muted/50 hover:border-border",
+                )}
+              >
+                Conversation
+                {expandedSections.has("conversation") ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
+                {selectedProblem?.conversation && selectedProblem.conversation.length > 0 ? 
+                  renderConversation(selectedProblem.conversation) :
+                  <div className="text-center text-muted-foreground py-4">
+                    No conversation data available for this test
+                  </div>
+                }
+              </div>
+            </CollapsibleContent>
             </Collapsible>
-          )}
+        
 
           {condition !== "2" && selectedProblem.exampleVideos && selectedProblem.exampleVideos.length > 0 && (
             <Collapsible open={expandedSections.has("examples")} onOpenChange={() => toggleSection("examples")}>
@@ -984,20 +982,7 @@ export function FeedbackPanel({
                             >
                               {condition === "2" ? "View Results" : "View Details"}
                             </Button>
-                            {condition === "2" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setShowTestCreationModal(true)
-                                }}
-                              >
-                                <Edit className="w-3 h-3 mr-1" />
-                                Edit Test Case
-                              </Button>
-                            )}
+                            
                           </div>
                         </div>
                       </div>
@@ -1135,20 +1120,7 @@ export function FeedbackPanel({
                         >
                           {condition === "2" ? "View Results" : "View Details"}
                         </Button>
-                        {condition === "2" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setShowTestCreationModal(true)
-                            }}
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit Test Case
-                          </Button>
-                        )}
+                        
                       </div>
                     </div>
                   </div>

@@ -1,8 +1,30 @@
+export type AgentResponse = {
+  role: "user" | "agent" | "tool";
+  message?: string | null;
+  original_message?: string | null;
+  time_in_call_secs?: number | null;
+  source_medium?: string | null;
+  tool_calls?: any[] | null;
+  tool_results?: any[] | null;
+  feedback?: { score?: string; time_in_call_secs?: number } | null;
+  llm_override?: string | null;
+  conversation_turn_metrics?: any | null;
+  rag_retrieval_info?: {
+    chunks?: Array<{ document_id?: string; chunk_id?: string; vector_distance?: number }>;
+    embedding_model?: string;
+    retrieval_query?: string;
+    rag_latency_secs?: number;
+  } | null;
+  interrupted?: boolean;
+  llm_usage?: any | null;
+};
+
 export type SavedTest = {
   id: string;
   title: string;
   description: string;
   createdAt: string; // ISO timestamp
+  conversation?: AgentResponse[]; // <--- new field
 };
 
 const KEY = "elevenlabs:saved-tests";
@@ -25,9 +47,15 @@ function read(): SavedTest[] {
   }
 }
 
-export function updateSavedTest(test: SavedTest): SavedTest[] {
+export function updateSavedTest(test: Partial<SavedTest> & { id: string }): SavedTest[] {
   const existing = read();
-  const updated = existing.map(t => t.id === test.id ? test : t);
+
+  const updated = existing.map(t =>
+    t.id === test.id
+      ? { ...t, ...test } // merge old + new fields
+      : t
+  );
+
   write(updated);
   return updated;
 }

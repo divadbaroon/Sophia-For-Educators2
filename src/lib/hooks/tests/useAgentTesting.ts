@@ -4,7 +4,33 @@ import {
   setLastCreatedTestId,
   updateSavedTest,
   type SavedTest,
-} from '@/lib/storage/tests'; 
+  // If you exported AgentResponse from storage, uncomment this and delete the local type below:
+  // type AgentResponse,
+} from '@/lib/storage/tests';
+
+/** Local copy of AgentResponse shape (kept minimal for storage).
+ * If you already export this from storage/tests, import it instead and remove this.
+ */
+type AgentResponse = {
+  role: 'user' | 'agent' | 'tool';
+  message?: string | null;
+  original_message?: string | null;
+  time_in_call_secs?: number | null;
+  source_medium?: string | null;
+  tool_calls?: any[] | null;
+  tool_results?: any[] | null;
+  feedback?: { score?: string; time_in_call_secs?: number } | null;
+  llm_override?: string | null;
+  conversation_turn_metrics?: any | null;
+  rag_retrieval_info?: {
+    chunks?: Array<{ document_id?: string; chunk_id?: string; vector_distance?: number }>;
+    embedding_model?: string;
+    retrieval_query?: string;
+    rag_latency_secs?: number;
+  } | null;
+  interrupted?: boolean;
+  llm_usage?: any | null;
+};
 
 interface TestData {
   testName: string;
@@ -16,12 +42,24 @@ interface TestData {
   toolCallParameters?: Record<string, any>;
 }
 
-
 interface UpdatedTest {
   id: string;
 }
 
 interface CreatedTest { id: string; }
+
+/** Map modal chatMessages -> SavedTest.conversation turns (AgentResponse[])
+ * Note: ElevenLabs uses role: 'user' | 'agent' (not 'assistant').
+ */
+function mapChatMessagesToConversation(
+  chatMessages: Array<{ type: 'user' | 'agent'; text: string }> | undefined
+): AgentResponse[] {
+  const msgs = Array.isArray(chatMessages) ? chatMessages : [];
+  return msgs.map<AgentResponse>((m) => {
+    const role: AgentResponse['role'] = m.type === 'user' ? 'user' : 'agent';
+    return { role, message: m.text ?? '' };
+  });
+}
 
 export function useCreateTest() {
   const [isCreating, setIsCreating] = useState(false);
@@ -41,12 +79,13 @@ export function useCreateTest() {
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || 'Failed to create test');
 
-      // ✅ Persist locally
+      // ✅ Persist locally (now with conversation history)
       const saved: SavedTest = {
         id: data.id, // ElevenLabs ID
         title: testData.testName,
         description: testData.successCriteria.slice(0, 140) + '…',
         createdAt: new Date().toISOString(),
+        conversation: mapChatMessagesToConversation(testData.chatMessages),
       };
       addSavedTest(saved);
       setLastCreatedTestId(data.id);
@@ -129,14 +168,16 @@ export function useUpdateTest() {
         throw new Error(data?.error || 'Failed to update test');
       }
 
-      // Update local storage with new data
+      // ✅ Update local storage (now also persist conversation)
       const updatedSavedTest: SavedTest = {
         id: testId,
         title: testData.testName,
         description: testData.successCriteria.slice(0, 140) + '…',
         createdAt: new Date().toISOString(), // Updated timestamp
+        conversation: mapChatMessagesToConversation(testData.chatMessages),
       };
 
+      // Works with both full-replace and partial-merge versions of updateSavedTest
       updateSavedTest(updatedSavedTest);
 
       console.log('✅ Test updated successfully:', testId);
@@ -192,55 +233,104 @@ interface TestRunResponse {
   created_at: number;
 }
 
+// IMPORTANT: role should be 'agent' not 'assistant' to align with ElevenLabs data
+type RunAgentResponse = {
+  role: 'user' | 'agent' | 'tool';
+  message?: string;
+  time_in_call_secs?: number;
+  tool_calls?: any[];
+  tool_results?: any[];
+};
+
+type TestRun = {
+  test_run_id: string;
+  status: 'pending' | 'passed' | 'failed'; // per docs after resolution
+  agent_responses: RunAgentResponse[] | null;
+  last_updated_at_unix?: number | null;
+};
+
+type TestInvocation = {
+  id: string;
+  test_runs: TestRun[];
+  created_at?: number | null;
+};
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function allTerminal(runs: TestRun[]) {
+  // Terminal states per docs are "passed" or "failed"
+  return runs.length > 0 && runs.every((r) => r.status !== 'pending');
+}
+
 export function useRunTests() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<TestRunResponse | null>(null);
 
-  const runTests = async (data: RunTestsData): Promise<TestRunResponse | null> => {
+  const runTests = async (runData: { agentId: string; testIds: string[] }): Promise<TestInvocation | null> => {
     setIsRunning(true);
     setError(null);
-    setTestResults(null);
 
     try {
       console.log('🚀 Starting test run...');
-      
-      const response = await fetch('/api/elevenlabs/run-tests', {
+
+      // 1) Start the run
+      const startRes = await fetch('/api/elevenlabs/run-tests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(runData),
       });
+      if (!startRes.ok) {
+        const e = await startRes.json().catch(() => ({}));
+        throw new Error(e.error || `Failed to initiate test run (${startRes.status})`);
+      }
+      const startData = await startRes.json();
+      const invocationId: string = startData.invocationId ?? startData.id;
+      if (!invocationId) throw new Error('No invocation id returned from run-tests');
+      console.log(`✅ Test run initiated: ${invocationId}`);
 
-      const responseData = await response.json();
+      // 2) Poll for completion (exponential backoff-ish)
+      const started = Date.now();
+      const timeoutMs = 120_000; // 2 minutes
+      let attempt = 0;
 
-      if (!response.ok) {
-        throw new Error(responseData?.error || 'Failed to run tests');
+      while (Date.now() - started < timeoutMs) {
+        attempt += 1;
+        const res = await fetch(`/api/elevenlabs/test-invocations/${invocationId}`, { cache: 'no-store' });
+        if (!res.ok) {
+          console.warn(`❓ Poll attempt ${attempt} failed: ${res.status}`);
+        } else {
+          const last = (await res.json()) as TestInvocation;
+
+          const runs = last.test_runs ?? [];
+          console.log(
+            `🔍 Poll ${attempt}:`,
+            runs.map((r) => ({
+              id: r.test_run_id,
+              status: r.status,
+              responses: Array.isArray(r.agent_responses) ? r.agent_responses.length : null,
+            }))
+          );
+
+          if (allTerminal(runs)) {
+            console.log('✅ All runs terminal; returning results');
+            return last;
+          }
+        }
+
+        // backoff: 1s, 1.5s, 2s, ... capped at 3s
+        const wait = Math.min(1000 + attempt * 500, 3000);
+        await sleep(wait);
       }
 
-      console.log('✅ Test run initiated:', responseData.id);
-      setTestResults(responseData);
-      return responseData as TestRunResponse;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to run tests';
-      console.error('❌ Test run failed:', msg);
-      setError(msg);
+      throw new Error('Tests did not complete in the allocated time');
+    } catch (e) {
+      console.error('❌ Error running tests:', e);
+      setError(e instanceof Error ? e.message : 'Failed to run tests');
       return null;
     } finally {
       setIsRunning(false);
     }
   };
 
-  const clearResults = () => {
-    setTestResults(null);
-    setError(null);
-  };
-
-  return { 
-    runTests, 
-    isRunning, 
-    error, 
-    testResults,
-    clearResults
-  };
+  return { runTests, isRunning, error };
 }
-
