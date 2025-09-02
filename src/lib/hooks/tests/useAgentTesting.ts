@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   addSavedTest,
   setLastCreatedTestId,
+  updateSavedTest,
   type SavedTest,
 } from '@/lib/storage/tests'; 
 
@@ -13,6 +14,11 @@ interface TestData {
   chatMessages: Array<{ id: string; type: 'user' | 'agent'; text: string }>;
   dynamicVariables?: Record<string, any>;
   toolCallParameters?: Record<string, any>;
+}
+
+
+interface UpdatedTest {
+  id: string;
 }
 
 interface CreatedTest { id: string; }
@@ -98,4 +104,53 @@ export function useFetchTest() {
     isLoading,
     error
   };
+}
+
+export function useUpdateTest() {
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateTest = async (testId: string, testData: TestData): Promise<UpdatedTest | null> => {
+    setIsUpdating(true);
+    setError(null);
+
+    try {
+      console.log('🔄 Updating test:', testId);
+
+      const response = await fetch(`/api/elevenlabs/update-test/${testId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to update test');
+      }
+
+      // Update local storage with new data
+      const updatedSavedTest: SavedTest = {
+        id: testId,
+        title: testData.testName,
+        description: testData.successCriteria.slice(0, 140) + '…',
+        createdAt: new Date().toISOString(), // Updated timestamp
+      };
+
+      updateSavedTest(updatedSavedTest);
+
+      console.log('✅ Test updated successfully:', testId);
+      
+      return { id: testId } as UpdatedTest;
+    } catch (err) {
+      console.error('❌ Error updating test:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update test';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return { updateTest, isUpdating, error };
 }
