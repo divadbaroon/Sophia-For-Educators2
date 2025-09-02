@@ -10,6 +10,8 @@ import { ValidationInterface } from "@/components/testResults/validation-interfa
 import { TestCreation } from "@/components/testCreation/test-creation"
 
 import { useFetchAgentConfig, useUpdateAgentConfig } from "@/lib/hooks/configuration/useAgentConfiguration"
+import { useRunTests } from "@/lib/hooks/tests/useAgentTesting"
+import { loadSavedTests } from "@/lib/storage/tests"
 
 import { AgentInfo } from "@/components/configuration/types"
 
@@ -19,12 +21,14 @@ const ConditionTwoPage = () => {
   const [currentStep, setCurrentStep] = useState(0)
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null)
+  const [testResults, setTestResults] = useState<any>(null)
 
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
   const { updateAgentConfig, isSaving, error: updateError } = useUpdateAgentConfig()
+  const { runTests, isRunning: isRunningTestsAPI, error: runTestsError } = useRunTests()
 
-  const error = fetchError || updateError
-  const steps = ["Setting up test cases", "Running test cases"]
+  const error = fetchError || updateError || runTestsError
+  const steps = ["Setting up test cases", "Running test cases", "Processing results"]
 
   // Load agent config on component mount
   const handleFetchConfig = async () => {
@@ -44,18 +48,59 @@ const ConditionTwoPage = () => {
   }
 
   const handleRunTests = async () => {
+    if (!agentInfo?.agent_id) {
+      console.error('No agent ID available');
+      return;
+    }
+
+    // Get saved test IDs from localStorage
+    const savedTests = loadSavedTests();
+    const testIds = savedTests.map(test => test.id);
+
+    if (testIds.length === 0) {
+      console.error('No tests available to run');
+      // You might want to show a user-friendly message here
+      return;
+    }
+
     setActiveTab("validation")
     setIsRunningTests(true)
     setCurrentStep(0)
+    setTestResults(null)
 
-    // Simulate progress through steps
-    for (let i = 0; i < steps.length; i++) {
-      setCurrentStep(i)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      // Step 1: Setting up test cases
+      setCurrentStep(0)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Step 2: Running test cases and awaiting completion
+      setCurrentStep(1)
+      console.log('🚀 Starting test execution and awaiting results...');
+      
+      const runData = {
+        agentId: agentInfo.agent_id,
+        testIds: testIds
+        // Tests will run against the agent's current saved configuration
+      };
+
+      // Await the complete test results - no polling needed
+      const testRunResponse = await runTests(runData);
+      
+      if (testRunResponse) {
+        // Step 3: Processing and displaying results
+        setCurrentStep(2)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Use the complete results directly
+        setTestResults(testRunResponse);
+        console.log('📊 All test results received and processed');
+        setTestsRun(true);
+      }
+    } catch (error) {
+      console.error('❌ Test execution failed:', error);
+    } finally {
+      setIsRunningTests(false);
     }
-
-    setIsRunningTests(false)
-    setTestsRun(true)
   }
 
   useEffect(() => {
@@ -74,7 +119,7 @@ const ConditionTwoPage = () => {
             </div>
             <Button
               onClick={handleRunTests}
-              disabled={isRunningTests || isLoading}
+              disabled={isRunningTests || isLoading || !agentInfo?.agent_id}
               className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2"
             >
               {isRunningTests ? (
@@ -190,6 +235,7 @@ const ConditionTwoPage = () => {
                       agentInfo={agentInfo}
                       isSaving={isSaving}
                       onUpdateConfig={handleUpdateConfig}
+                      testResults={testResults}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">

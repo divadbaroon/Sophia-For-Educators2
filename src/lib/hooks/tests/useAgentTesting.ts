@@ -154,3 +154,93 @@ export function useUpdateTest() {
 
   return { updateTest, isUpdating, error };
 }
+
+interface RunTestsData {
+  agentId: string;
+  testIds: string[];
+  agentConfigOverride?: {
+    name?: string;
+    prompt?: string;
+    first_message?: string;
+  };
+}
+
+interface TestRunResponse {
+  id: string;
+  test_runs: Array<{
+    test_run_id: string;
+    test_invocation_id: string;
+    agent_id: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    test_id: string;
+    agent_responses: any[];
+    condition_result: {
+      result: 'success' | 'failure';
+      rationale: {
+        messages: string[];
+        summary: string;
+      };
+    };
+    last_updated_at_unix: number;
+    metadata: {
+      workspace_id: string;
+      test_name: string;
+      ran_by_user_email: string;
+      test_type: string;
+    };
+  }>;
+  created_at: number;
+}
+
+export function useRunTests() {
+  const [isRunning, setIsRunning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<TestRunResponse | null>(null);
+
+  const runTests = async (data: RunTestsData): Promise<TestRunResponse | null> => {
+    setIsRunning(true);
+    setError(null);
+    setTestResults(null);
+
+    try {
+      console.log('🚀 Starting test run...');
+      
+      const response = await fetch('/api/elevenlabs/run-tests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(responseData?.error || 'Failed to run tests');
+      }
+
+      console.log('✅ Test run initiated:', responseData.id);
+      setTestResults(responseData);
+      return responseData as TestRunResponse;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to run tests';
+      console.error('❌ Test run failed:', msg);
+      setError(msg);
+      return null;
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const clearResults = () => {
+    setTestResults(null);
+    setError(null);
+  };
+
+  return { 
+    runTests, 
+    isRunning, 
+    error, 
+    testResults,
+    clearResults
+  };
+}
+

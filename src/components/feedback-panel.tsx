@@ -46,6 +46,14 @@ interface FeedbackItem {
     after: string
     explanation: string
   }
+  // Add these new fields for real test data
+  conversation?: any[]
+  testMetadata?: {
+    testId: string
+    status: string
+    runId: string
+    lastUpdated: number
+  }
 }
 
 interface FeedbackData {
@@ -61,11 +69,11 @@ interface FeedbackData {
 interface FeedbackPanelProps {
   feedbackData: FeedbackData
   selectedLine: number | null
-  condition?: string // Added condition prop to control display behavior
-  onClearSelection?: () => void // Added callback to clear line selection
+  condition?: string
+  onClearSelection?: () => void
   isRunningTests?: boolean
   currentStep?: number
-  steps?: string[] // Added steps prop to allow different progress steps for different conditions
+  steps?: string[]
 }
 
 const severityConfig = {
@@ -141,6 +149,156 @@ export function FeedbackPanel({
     setIsEditingChange(false)
     setEditedChange(item.suggestedChange?.after || "")
   }
+
+  const renderConversation = (conversation: any[]) => {
+    if (!conversation || conversation.length === 0) {
+      return (
+        <div className="text-center text-muted-foreground py-4">
+          No conversation data available for this test
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {conversation.map((message: any, index: number) => {
+          const isUser = message.role === 'user';
+          const isAgent = message.role === 'agent';
+          
+          return (
+            <div key={index} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+              <div className="max-w-[80%]">
+                <div className={`text-xs font-medium text-muted-foreground mb-1 ${isUser ? 'text-right mr-1' : 'ml-1'}`}>
+                  {isUser ? 'User' : 'Agent'}
+                  {message.time_in_call_secs && (
+                    <span className="ml-2 text-xs opacity-60">
+                      {message.time_in_call_secs}s
+                    </span>
+                  )}
+                  {message.source_medium && (
+                    <span className="ml-1 text-xs opacity-60 capitalize">
+                      ({message.source_medium})
+                    </span>
+                  )}
+                </div>
+                <div className={cn(
+                  "border rounded-lg p-3",
+                  isUser 
+                    ? "bg-blue-500 text-white border-blue-500" 
+                    : "bg-card border-border text-card-foreground"
+                )}>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {message.message || message.original_message || 'No message content'}
+                  </p>
+                  
+                  {/* Show if message was interrupted */}
+                  {message.interrupted && (
+                    <div className="mt-2 pt-2 border-t border-opacity-20">
+                      <div className="text-xs opacity-80 italic text-yellow-400">
+                        Message was interrupted
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show LLM override if present */}
+                  {message.llm_override && (
+                    <div className="mt-2 pt-2 border-t border-opacity-20">
+                      <div className="text-xs opacity-80 mb-1">LLM Override:</div>
+                      <div className="text-xs opacity-70 font-mono">
+                        {message.llm_override}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show tool calls if present */}
+                  {message.tool_calls && message.tool_calls.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-opacity-20">
+                      <div className="text-xs opacity-80 mb-1">Tool calls:</div>
+                      {message.tool_calls.map((tool: any, toolIndex: number) => (
+                        <div key={toolIndex} className="text-xs opacity-70 mb-1">
+                          <strong>{tool.tool_name}</strong>
+                          {tool.params_as_json && (
+                            <div className="font-mono text-xs mt-1 p-1 bg-black/10 rounded">
+                              {tool.params_as_json}
+                            </div>
+                          )}
+                          <div className="text-xs opacity-60">
+                            Status: {tool.tool_has_been_called ? 'Called' : 'Not called'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Show tool results if present */}
+                  {message.tool_results && message.tool_results.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-opacity-20">
+                      <div className="text-xs opacity-80 mb-1">Tool results:</div>
+                      {message.tool_results.map((result: any, resultIndex: number) => (
+                        <div key={resultIndex} className="text-xs opacity-70 mb-1">
+                          <strong>{result.tool_name}</strong>: {result.result_value}
+                          {result.is_error && <span className="text-red-400 ml-1">(Error)</span>}
+                          {result.tool_latency_secs && (
+                            <span className="ml-1 opacity-60">({result.tool_latency_secs}s)</span>
+                          )}
+                          
+                          {/* Show dynamic variable updates */}
+                          {result.dynamic_variable_updates && result.dynamic_variable_updates.length > 0 && (
+                            <div className="mt-1 pl-2 border-l-2 border-blue-300">
+                              <div className="text-xs opacity-60">Variable updates:</div>
+                              {result.dynamic_variable_updates.map((update: any, updateIndex: number) => (
+                                <div key={updateIndex} className="text-xs opacity-60">
+                                  {update.variable_name}: {update.old_value} → {update.new_value}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Show feedback if present */}
+                  {message.feedback && (
+                    <div className="mt-2 pt-2 border-t border-opacity-20">
+                      <div className="text-xs opacity-80">
+                        Feedback: {message.feedback.score} 
+                        {message.feedback.time_in_call_secs && (
+                          <span className="ml-1">at {message.feedback.time_in_call_secs}s</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show RAG retrieval info if present */}
+                  {message.rag_retrieval_info && message.rag_retrieval_info.chunks && (
+                    <div className="mt-2 pt-2 border-t border-opacity-20">
+                      <div className="text-xs opacity-80 mb-1">
+                        RAG Retrieval ({message.rag_retrieval_info.embedding_model}):
+                      </div>
+                      <div className="text-xs opacity-70">
+                        Query: "{message.rag_retrieval_info.retrieval_query}"
+                      </div>
+                      {message.rag_retrieval_info.chunks.slice(0, 3).map((chunk: any, chunkIndex: number) => (
+                        <div key={chunkIndex} className="text-xs opacity-60">
+                          Chunk {chunk.chunk_id} (distance: {chunk.vector_distance?.toFixed(3)})
+                        </div>
+                      ))}
+                      {message.rag_retrieval_info.rag_latency_secs && (
+                        <div className="text-xs opacity-60">
+                          Latency: {message.rag_retrieval_info.rag_latency_secs}s
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   const createDiffView = (before: string, after: string) => {
     const beforeLines = before.split("\n")
@@ -342,7 +500,52 @@ export function FeedbackPanel({
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-3">
                 <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
-                  <p className="text-muted-foreground text-pretty">{selectedProblem.problemOverview}</p>
+                  {/* Test Result Summary */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-medium">Test Result:</span>
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-xs font-medium",
+                        selectedProblem.severity === 'success' 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-red-100 text-red-800"
+                      )}>
+                        {selectedProblem.severity === 'success' ? 'PASSED' : 'FAILED'}
+                      </span>
+                    </div>
+                    
+                    {selectedProblem.testMetadata && (
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div>Test ID: {selectedProblem.testMetadata.testId}</div>
+                        <div>Run ID: {selectedProblem.testMetadata.runId}</div>
+                        {selectedProblem.testMetadata.lastUpdated && (
+                          <div>Last Updated: {new Date(selectedProblem.testMetadata.lastUpdated * 1000).toLocaleString()}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rationale */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium mb-2">Rationale:</h4>
+                    <div className="p-3 bg-card border border-border rounded">
+                      <p className="text-sm text-muted-foreground text-pretty">
+                        {selectedProblem.problemOverview}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Detailed Evidence if available */}
+                  {selectedProblem.evidence && selectedProblem.evidence.trim() && (
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Detailed Evidence:</h4>
+                      <div className="p-3 bg-card border border-border rounded">
+                        <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {selectedProblem.evidence}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -370,58 +573,12 @@ export function FeedbackPanel({
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-3">
                 <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
-                  <div className="space-y-4">
-                    {/* Tutor message */}
-                    <div className="flex justify-start">
-                      <div className="max-w-[80%]">
-                        <div className="text-xs font-medium text-muted-foreground mb-1 ml-1">Tutor</div>
-                        <div className="bg-card border border-border rounded-lg p-3">
-                          <p className="text-sm text-card-foreground">Hello, how can I help you today?</p>
-                        </div>
-                      </div>
+                  {selectedProblem?.conversation && selectedProblem.conversation.length > 0 ? 
+                    renderConversation(selectedProblem.conversation) :
+                    <div className="text-center text-muted-foreground py-4">
+                      No conversation data available for this test
                     </div>
-
-                    {/* Student message */}
-                    <div className="flex justify-end">
-                      <div className="max-w-[80%]">
-                        <div className="text-xs font-medium text-muted-foreground mb-1 mr-1 text-right">Student</div>
-                        <div className="bg-muted border border-border rounded-lg p-3">
-                          <p className="text-sm text-card-foreground">
-                            I dont know where to go from here and feel like giving up!!!
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Tutor response */}
-                    <div className="flex justify-start">
-                      <div className="max-w-[80%]">
-                        <div className="text-xs font-medium text-muted-foreground mb-1 ml-1">Tutor</div>
-                        <div
-                          className={cn(
-                            "border rounded-lg p-3",
-                            selectedProblem.severity === "success"
-                              ? "bg-[var(--color-success)]/10 border-[var(--color-success)]/20"
-                              : "bg-destructive/10 border-destructive/20",
-                          )}
-                        >
-                          <p
-                            className={cn(
-                              "text-sm",
-                              selectedProblem.severity === "success"
-                                ? "text-[var(--color-success)]"
-                                : "text-destructive",
-                            )}
-                          >
-                            I hear your frustration! It's completely normal to feel overwhelmed sometimes when learning
-                            algorithms. I can see your DFS implementation actually looks good and your tests are
-                            passing! Would you like to talk through what's making you feel stuck? Sometimes just
-                            discussing it can help clear things up.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  }
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -527,7 +684,7 @@ export function FeedbackPanel({
                             className={cn(
                               "cursor-pointer text-foreground hover:text-foreground",
                               !showOriginal
-                                ? "text-white hover:text-white" // Keep text white when selected
+                                ? "text-white hover:text-white"
                                 : "hover:bg-gray-100 dark:hover:bg-gray-800",
                             )}
                           >
@@ -540,7 +697,7 @@ export function FeedbackPanel({
                             className={cn(
                               "cursor-pointer text-foreground hover:text-foreground",
                               showOriginal
-                                ? "text-white hover:text-white" // Keep text white when selected
+                                ? "text-white hover:text-white"
                                 : "hover:bg-gray-100 dark:hover:bg-gray-800",
                             )}
                           >
@@ -696,50 +853,65 @@ export function FeedbackPanel({
         ) : condition === "2" ? (
           !showAllResults ? (
             <div className="space-y-4">
-              <Card className="bg-card border border-border">
-                <CardContent className="p-6">
-                  <div className="text-center space-y-4">
-                    <div className="space-y-2">
-                      <div className="text-2xl font-medium space-x-2 whitespace-nowrap">
-                        <span className="text-[var(--color-success)]">{feedbackData.summary.passed} passed</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-destructive">
-                          {feedbackData.summary.errors + feedbackData.summary.warnings} failed
-                        </span>
+              {feedbackData.summary.total === 0 ? (
+                <Card className="bg-card border border-border">
+                  <CardContent className="p-6">
+                    <div className="text-center space-y-4">
+                      <div className="text-lg font-medium text-muted-foreground">
+                        No test results available
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        out of {feedbackData.summary.total} total test cases
-                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Run tests to see your agent's performance evaluation
+                      </p>
                     </div>
-                    <div className="w-full max-w-md mx-auto">
-                      <div className="h-3 bg-muted rounded-full overflow-hidden flex">
-                        <div
-                          className="bg-[var(--color-success)] transition-all duration-300"
-                          style={{ width: `${(feedbackData.summary.passed / feedbackData.summary.total) * 100}%` }}
-                        />
-                        <div
-                          className="bg-destructive transition-all duration-300"
-                          style={{
-                            width: `${((feedbackData.summary.errors + feedbackData.summary.warnings) / feedbackData.summary.total) * 100}%`,
-                          }}
-                        />
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="bg-card border border-border">
+                  <CardContent className="p-6">
+                    <div className="text-center space-y-4">
+                      <div className="space-y-2">
+                        <div className="text-2xl font-medium space-x-2 whitespace-nowrap">
+                          <span className="text-[var(--color-success)]">{feedbackData.summary.passed} passed</span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-destructive">
+                            {feedbackData.summary.errors + feedbackData.summary.warnings} failed
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          out of {feedbackData.summary.total} total test cases
+                        </div>
                       </div>
+                      <div className="w-full max-w-md mx-auto">
+                        <div className="h-3 bg-muted rounded-full overflow-hidden flex">
+                          <div
+                            className="bg-[var(--color-success)] transition-all duration-300"
+                            style={{ width: `${(feedbackData.summary.passed / feedbackData.summary.total) * 100}%` }}
+                          />
+                          <div
+                            className="bg-destructive transition-all duration-300"
+                            style={{
+                              width: `${((feedbackData.summary.errors + feedbackData.summary.warnings) / feedbackData.summary.total) * 100}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                        Your pedagogical teaching agent has been evaluated against {feedbackData.summary.total} test
+                        cases. The analysis identified areas where the agent's responses may not align with best teaching
+                        practices or could potentially confuse students.
+                      </p>
+                      <div className="border-t border-border my-4"></div>
+                      <Button
+                        onClick={() => setShowAllResults(true)}
+                        className="bg-black text-white hover:bg-gray-800 px-6 py-2 font-semibold cursor-pointer"
+                      >
+                        See Test Results
+                      </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Your pedagogical teaching agent has been evaluated against {feedbackData.summary.total} test
-                      cases. The analysis identified areas where the agent's responses may not align with best teaching
-                      practices or could potentially confuse students.
-                    </p>
-                    <div className="border-t border-border my-4"></div>
-                    <Button
-                      onClick={() => setShowAllResults(true)}
-                      className="bg-black text-white hover:bg-gray-800 px-6 py-2 font-semibold cursor-pointer"
-                    >
-                      See Test Results
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : (
             <>
@@ -800,35 +972,33 @@ export function FeedbackPanel({
                             </div>
                           )}
                           <p className="text-sm text-muted-foreground mt-1 text-pretty">{item.description}</p>
-                          {(item.problemOverview || item.exampleVideos || item.suggestedChange) && (
-                            <div className="flex gap-2 mt-2">
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                showProblemDetails(item)
+                              }}
+                            >
+                              {condition === "2" ? "View Results" : "View Details"}
+                            </Button>
+                            {condition === "2" && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  showProblemDetails(item)
+                                  setShowTestCreationModal(true)
                                 }}
                               >
-                                {condition === "2" ? "View Results" : "View Details"}
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit Test Case
                               </Button>
-                              {condition === "2" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setShowTestCreationModal(true)
-                                  }}
-                                >
-                                  <Edit className="w-3 h-3 mr-1" />
-                                  Edit Test Case
-                                </Button>
-                              )}
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardHeader>
@@ -839,47 +1009,62 @@ export function FeedbackPanel({
           )
         ) : !selectedLine ? (
           <div className="space-y-4">
-            <Card className="bg-card border border-border">
-              <CardContent className="p-6">
-                <div className="text-center space-y-4">
-                  <div className="space-y-2">
-                    <div className="text-2xl font-medium space-x-2 whitespace-nowrap">
-                      <span className="text-[var(--color-success)]">{feedbackData.summary.passed} passed</span>
-                      <span className="text-muted-foreground">•</span>
-                      <span className="text-destructive">
-                        {feedbackData.summary.errors + feedbackData.summary.warnings} failed
-                      </span>
+            {feedbackData.summary.total === 0 ? (
+              <Card className="bg-card border border-border">
+                <CardContent className="p-6">
+                  <div className="text-center space-y-4">
+                    <div className="text-lg font-medium text-muted-foreground">
+                      No test results available
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      out of {feedbackData.summary.total} total test cases
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Run tests to see your agent's performance evaluation
+                    </p>
                   </div>
-                  <div className="w-full max-w-md mx-auto">
-                    <div className="h-3 bg-muted rounded-full overflow-hidden flex">
-                      <div
-                        className="bg-[var(--color-success)] transition-all duration-300"
-                        style={{ width: `${(feedbackData.summary.passed / feedbackData.summary.total) * 100}%` }}
-                      />
-                      <div
-                        className="bg-destructive transition-all duration-300"
-                        style={{
-                          width: `${((feedbackData.summary.errors + feedbackData.summary.warnings) / feedbackData.summary.total) * 100}%`,
-                        }}
-                      />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-card border border-border">
+                <CardContent className="p-6">
+                  <div className="text-center space-y-4">
+                    <div className="space-y-2">
+                      <div className="text-2xl font-medium space-x-2 whitespace-nowrap">
+                        <span className="text-[var(--color-success)]">{feedbackData.summary.passed} passed</span>
+                        <span className="text-muted-foreground">•</span>
+                        <span className="text-destructive">
+                          {feedbackData.summary.errors + feedbackData.summary.warnings} failed
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        out of {feedbackData.summary.total} total test cases
+                      </div>
                     </div>
+                    <div className="w-full max-w-md mx-auto">
+                      <div className="h-3 bg-muted rounded-full overflow-hidden flex">
+                        <div
+                          className="bg-[var(--color-success)] transition-all duration-300"
+                          style={{ width: `${(feedbackData.summary.passed / feedbackData.summary.total) * 100}%` }}
+                        />
+                        <div
+                          className="bg-destructive transition-all duration-300"
+                          style={{
+                            width: `${((feedbackData.summary.errors + feedbackData.summary.warnings) / feedbackData.summary.total) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      Your pedagogical teaching agent has been evaluated against {feedbackData.summary.total} test cases.
+                      The analysis identified areas where the agent's responses may not align with best teaching practices
+                      or could potentially confuse students.
+                    </p>
+                    <div className="border-t border-border my-4"></div>
+                    <p className="text-sm text-muted-foreground">
+                      Click on a red highlighted line to review and remediate
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Your pedagogical teaching agent has been evaluated against {feedbackData.summary.total} test cases.
-                    The analysis identified areas where the agent's responses may not align with best teaching practices
-                    or could potentially confuse students.
-                  </p>
-                  <div className="border-t border-border my-4"></div>
-                  <p className="text-sm text-muted-foreground">
-                    Click on a red highlighted line to review and remediate
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
         ) : (
           filteredItems.map((item) => {
@@ -938,35 +1123,33 @@ export function FeedbackPanel({
                         </div>
                       )}
                       <p className="text-sm text-muted-foreground mt-1 text-pretty">{item.description}</p>
-                      {(item.problemOverview || item.exampleVideos || item.suggestedChange) && (
-                        <div className="flex gap-2 mt-2">
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            showProblemDetails(item)
+                          }}
+                        >
+                          {condition === "2" ? "View Results" : "View Details"}
+                        </Button>
+                        {condition === "2" && (
                           <Button
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
                             onClick={(e) => {
                               e.stopPropagation()
-                              showProblemDetails(item)
+                              setShowTestCreationModal(true)
                             }}
                           >
-                            {condition === "2" ? "View Results" : "View Details"}
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit Test Case
                           </Button>
-                          {condition === "2" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 text-xs bg-transparent cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setShowTestCreationModal(true)
-                              }}
-                            >
-                              <Edit className="w-3 h-3 mr-1" />
-                              Edit Test Case
-                            </Button>
-                          )}
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
