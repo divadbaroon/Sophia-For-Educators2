@@ -5,7 +5,7 @@ export async function PATCH(req: NextRequest) {
     console.log('💾 Updating agent configuration...');
     
     const body = await req.json();
-    const { name, prompt, first_message, voice_id } = body;
+    const { name, prompt, first_message } = body;
 
     if (!name || !prompt) {
       return NextResponse.json(
@@ -39,9 +39,6 @@ export async function PATCH(req: NextRequest) {
           prompt: {
             prompt: prompt
           }
-        },
-        tts: {
-          voice_id: voice_id || ""
         }
       }
     };
@@ -50,8 +47,7 @@ export async function PATCH(req: NextRequest) {
       agentId,
       nameLength: name.length,
       promptLength: prompt.length,
-      hasFirstMessage: !!first_message,
-      hasVoiceId: !!voice_id
+      hasFirstMessage: !!first_message
     });
 
     const response = await fetch(`https://api.elevenlabs.io/v1/convai/agents/${agentId}`, {
