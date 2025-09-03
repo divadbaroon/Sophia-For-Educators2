@@ -67,13 +67,12 @@ export function TestCreationModal({
     { id: "execution_output", key: "execution_output", value: "" },
   ]);
 
-  // ✅ track “saved since opened” + confirm dialog visibility
+  // track “saved since opened” + confirm dialog visibility
   const [hasSavedSinceOpen, setHasSavedSinceOpen] = useState(false);
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
 
   const messagesScrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Reset "saved" flag when the modal opens
   useEffect(() => {
     if (isOpen) setHasSavedSinceOpen(false);
   }, [isOpen]);
@@ -83,7 +82,6 @@ export function TestCreationModal({
     if (!isOpen) return;
 
     if (initialData) {
-      // Edit mode - populate with existing data
       setTestName(initialData.testName || "");
       setSuccessCriteria(initialData.successCriteria || "");
       setSuccessExamples(initialData.successExamples || []);
@@ -101,7 +99,6 @@ export function TestCreationModal({
         { id: "execution_output", key: "execution_output", value: dv.execution_output === null ? "null" : (dv.execution_output !== undefined ? String(dv.execution_output) : "") },
       ]);
     } else {
-      // Create mode - empty form with default first message
       setTestName("");
       setSuccessCriteria("");
       setSuccessExamples([]);
@@ -193,7 +190,13 @@ export function TestCreationModal({
     return input;
   }
 
+  // must have at least one non-empty user message
+  const hasUserMessage = chatMessages.some(m => m.type === "user" && m.text.trim().length > 0); // NEW
+
   const handleSave = () => {
+    // Guard as well in case someone bypasses the disabled button
+    if (!hasUserMessage) return; 
+
     const dynamicVariables = dynamicVarRows.reduce<Record<string, string | number | boolean | null>>((acc, r) => {
       acc[r.key] = parsePrimitive(r.value);
       return acc;
@@ -209,13 +212,12 @@ export function TestCreationModal({
       dynamicVariables,
     };
 
-    // ✅ mark as saved before closing
     setHasSavedSinceOpen(true);
     onSave(testData);
     onClose();
   };
 
-  // ✅ centralize close requests (outside click, ESC, header X, Back button)
+  // centralize close requests (outside click, ESC, header X, Back button)
   const requestClose = () => {
     if (!hasSavedSinceOpen) {
       setConfirmCloseOpen(true);
@@ -226,14 +228,15 @@ export function TestCreationModal({
 
   const isEditMode = !!initialData;
   
-  // Form validation
-  const isFormValid = 
-    testName.trim() && 
-    successCriteria.trim() &&
+  // Form validation (+ user message requirement)
+  const isFormValid =
+    !!testName.trim() &&
+    !!successCriteria.trim() &&
     successExamples.length > 0 &&
     failureExamples.length > 0 &&
     successExamples.some(ex => ex.text.trim()) &&
-    failureExamples.some(ex => ex.text.trim());
+    failureExamples.some(ex => ex.text.trim()) &&
+    hasUserMessage; // NEW
 
   return (
     <>
@@ -241,7 +244,6 @@ export function TestCreationModal({
         open={isOpen}
         onOpenChange={(open) => {
           if (!open) {
-            // intercept closes and confirm if not saved
             requestClose();
           }
         }}
@@ -369,7 +371,6 @@ export function TestCreationModal({
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-sm font-medium text-gray-900">Dynamic variables</label>
-                  {/* no add button (fixed set) */}
                 </div>
 
                 <div className="space-y-2">
@@ -386,7 +387,6 @@ export function TestCreationModal({
                         onChange={(e) => updateDynamicVarValue(row.id, e.target.value)}
                         className="flex-1"
                       />
-                      {/* no delete button (fixed set) */}
                     </div>
                   ))}
                 </div>
@@ -513,6 +513,7 @@ export function TestCreationModal({
             <Button 
               onClick={handleSave}
               disabled={!isFormValid}
+              title={!hasUserMessage ? "Add at least one user message to save" : ""}
               className="bg-gray-900 hover:bg-gray-800"
             >
               {isEditMode ? 'Update Test' : 'Save Test'}
@@ -521,7 +522,7 @@ export function TestCreationModal({
         </DialogContent>
       </Dialog>
 
-      {/* ✅ Confirm close dialog */}
+      {/* Confirm close dialog */}
       <AlertDialog open={confirmCloseOpen} onOpenChange={setConfirmCloseOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
