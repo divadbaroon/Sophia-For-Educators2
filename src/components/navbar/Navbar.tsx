@@ -130,15 +130,6 @@ const Navbar = ({ user }: NavbarProps) => {
           </figure>
         ) : (
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild className="text-dark-100 hover:scale-105 transition-transform duration-200">
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Link
-              href="/sign-up"
-              className="bg-blue-600 text-white px-6 py-2 rounded-4xl hover:bg-blue-100/80 transition-all duration-200 shadow-md hover:shadow-lg font-semibold text-sm"
-            >
-              Get Started
-            </Link>
           </div>
         )}
       </nav>
