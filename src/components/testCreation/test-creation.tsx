@@ -135,7 +135,9 @@ export const TestCreation = ({
           type: msg.role === "user" ? "user" : "agent",
           text: msg.message || msg.text || "",
         })),
+        dynamicVariables: testData.dynamic_variables || testData.dynamicVariables || {},
       };
+
 
       setEditingTestId(testId);
       setEditingTestData(transformedData);

@@ -23,8 +23,9 @@ export type SavedTest = {
   id: string;
   title: string;
   description: string;
-  createdAt: string; // ISO timestamp
-  conversation?: AgentResponse[]; // <--- new field
+  createdAt: string; 
+  conversation?: AgentResponse[]; 
+  dynamicVariables?: Record<string, string | number | boolean | null>; 
 };
 
 const KEY = "elevenlabs:saved-tests";
@@ -49,13 +50,7 @@ function read(): SavedTest[] {
 
 export function updateSavedTest(test: Partial<SavedTest> & { id: string }): SavedTest[] {
   const existing = read();
-
-  const updated = existing.map(t =>
-    t.id === test.id
-      ? { ...t, ...test } // merge old + new fields
-      : t
-  );
-
+  const updated = existing.map((t) => (t.id === test.id ? { ...t, ...test } : t));
   write(updated);
   return updated;
 }
@@ -72,7 +67,7 @@ export function loadSavedTests(): SavedTest[] {
 export function addSavedTest(test: SavedTest): SavedTest[] {
   const existing = read();
   const deduped = existing.filter(t => t.id !== test.id);
-  const updated = [test, ...deduped]; // newest first
+  const updated = [test, ...deduped];
   write(updated);
   return updated;
 }

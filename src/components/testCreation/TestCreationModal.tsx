@@ -26,6 +26,7 @@ interface InitialData {
   successExamples: Example[];
   failureExamples: Example[];
   chatMessages: ChatMessage[];
+  dynamicVariables?: Record<string, string | number | boolean | null>;
 }
 
 interface TestCreationModalProps {
@@ -48,6 +49,12 @@ export function TestCreationModal({
   const [successExamples, setSuccessExamples] = useState<Example[]>([]);
   const [failureExamples, setFailureExamples] = useState<Example[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // Fixed dynamic vars (keys locked)
+  const [dynamicVarRows, setDynamicVarRows] = useState<Array<{ id: string; key: string; value: string }>>([
+    { id: "task_description", key: "task_description", value: "" },
+    { id: "student_code", key: "student_code", value: "" },
+    { id: "execution_output", key: "execution_output", value: "" },
+  ]);
 
   const messagesScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -66,6 +73,13 @@ export function TestCreationModal({
           ? initialData.chatMessages 
           : [{ id: "1", type: "agent", text: agentFirstMessage || "Hello, how can I help you today?" }]
       );
+
+      const dv = initialData.dynamicVariables || {};
+      setDynamicVarRows([
+        { id: "task_description", key: "task_description", value: dv.task_description === null ? "null" : (dv.task_description !== undefined ? String(dv.task_description) : "") },
+        { id: "student_code", key: "student_code", value: dv.student_code === null ? "null" : (dv.student_code !== undefined ? String(dv.student_code) : "") },
+        { id: "execution_output", key: "execution_output", value: dv.execution_output === null ? "null" : (dv.execution_output !== undefined ? String(dv.execution_output) : "") },
+      ]);
     } else {
       // Create mode - empty form with default first message
       setTestName("");
@@ -77,6 +91,11 @@ export function TestCreationModal({
         type: "agent", 
         text: agentFirstMessage || "Hello, how can I help you today?" 
       }]);
+      setDynamicVarRows([
+        { id: "task_description", key: "task_description", value: "" },
+        { id: "student_code", key: "student_code", value: "" },
+        { id: "execution_output", key: "execution_output", value: "" },
+      ]);
     }
   }, [isOpen, initialData, agentFirstMessage]);
 
@@ -140,14 +159,34 @@ export function TestCreationModal({
     }
   };
 
+  // Only allow editing values; keys are locked
+  function updateDynamicVarValue(id: string, value: string) {
+    setDynamicVarRows((rows) => rows.map(r => (r.id === id ? { ...r, value } : r)));
+  }
+
+  function parsePrimitive(input: string): string | number | boolean | null {
+    const t = input.trim();
+    if (t === "true") return true;
+    if (t === "false") return false;
+    if (t === "null") return null;
+    if (t !== "" && !Number.isNaN(Number(t))) return Number(t);
+    return input;
+  }
+
   const handleSave = () => {
+    const dynamicVariables = dynamicVarRows.reduce<Record<string, string | number | boolean | null>>((acc, r) => {
+      acc[r.key] = parsePrimitive(r.value);
+      return acc;
+    }, {});
+
     const testData = {
       id: initialData?.id, // Include ID if editing
       testName,
       successCriteria,
       successExamples,
       failureExamples,
-      chatMessages
+      chatMessages,
+      dynamicVariables,
     };
     onSave(testData);
     onClose();
@@ -284,6 +323,33 @@ export function TestCreationModal({
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dynamic Variables (fixed 3, keys locked) */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-gray-900">Dynamic variables</label>
+                {/* no add button (fixed set) */}
+              </div>
+
+              <div className="space-y-2">
+                {dynamicVarRows.map((row) => (
+                  <div key={row.id} className="flex gap-2">
+                    <Input
+                      value={row.key}
+                      readOnly
+                      className="w-1/3"
+                    />
+                    <Input
+                      placeholder=""
+                      value={row.value}
+                      onChange={(e) => updateDynamicVarValue(row.id, e.target.value)}
+                      className="flex-1"
+                    />
+                    {/* no delete button (fixed set) */}
                   </div>
                 ))}
               </div>
