@@ -475,7 +475,7 @@ export function FeedbackPanel({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-border bg-card">
+      <div className="p-4 border-b border-border bg-card -mt-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {selectedLine && onClearSelection ? (

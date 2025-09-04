@@ -59,7 +59,7 @@ export function PromptPanelCondition1({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-card">
+      <div className="p-4 border-b border-border bg-card -mt-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-card-foreground">System Prompt</h2>
           <div className="flex items-center gap-2">

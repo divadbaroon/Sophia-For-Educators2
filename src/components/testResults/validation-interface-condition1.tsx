@@ -41,7 +41,7 @@ export function ValidationInterfaceCondition1({
   }
 
   return (
-    <div className="h-full min-h-[600px] p-4 gap-6 flex">
+    <div className="h-full min-h-[600px] p-2 gap-6 flex -mt-2">
       <ResizablePanelGroup direction="horizontal" className="h-full bg-background">
         {/* Left Panel - Prompt Display */}
         <ResizablePanel defaultSize={50} minSize={30}>

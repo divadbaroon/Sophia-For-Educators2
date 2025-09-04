@@ -72,10 +72,10 @@ const ConditionOnePage = () => {
   }, [])
 
   return (
-    <main className="wrapper page min-h-screen bg-gray-50">
+    <main className="wrapper-full min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Header */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm mt-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm mt-5">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Prompt Validation Testing</h1>
@@ -114,7 +114,7 @@ const ConditionOnePage = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 {/* Tab Navigation */}
-                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg ">
                   <Button
                     variant={activeTab === "configuration" ? "default" : "secondary"}
                     size="sm"
