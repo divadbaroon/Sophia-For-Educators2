@@ -32,23 +32,12 @@ export function FeedbackPanelCondition1({
   currentStep,
   steps,
   promptData, 
-}: FeedbackPanelPropsCondition1) {
+}: FeedbackPanelPropsCondition1 ) {
   const [selectedProblem, setSelectedProblem] = useState<FeedbackItem | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]))
   const [isEditingChange, setIsEditingChange] = useState(false)
   const [editedChange, setEditedChange] = useState("")
   const [showOriginal, setShowOriginal] = useState(false)
-
-  // Log prompt data when it changes
-  useEffect(() => {
-    if (promptData?.content) {
-      console.log("=== PROMPT WITH LINE NUMBERS (from FeedbackPanel) ===")
-      promptData.content.forEach((line, index) => {
-        console.log(`${index + 1}: ${line}`)
-      })
-      console.log("=======================================================")
-    }
-  }, [promptData?.content])
 
   const toggleSection = (sectionId: string) => {
     const newExpanded = new Set<string>()
