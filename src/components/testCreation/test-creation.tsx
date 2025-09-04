@@ -5,12 +5,14 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { PromptPanel } from "@/components/promptSidePanel/prompt-panel";
 import { TestCreationModal } from "@/components/testCreation/TestCreationModal";
+import { PromptPanel } from "@/components/promptSidePanel/prompt-panel";
 
 import { Edit } from "lucide-react";
 
 import { useCreateTest, useFetchTest, useUpdateTest } from "@/lib/hooks/tests/useAgentTesting";
+
+import { mapChatMessagesToConversation } from "@/lib/utils/data-formatter"
 
 import {
   loadSavedTests,
@@ -20,22 +22,8 @@ import {
   type SavedTest,
 } from "@/lib/storage/tests";
 
-import type { TestCreationProps } from "./types";
+import type { TestCreationProps} from "./types";
 
-// import the AgentResponse type from your storage file
-import type { AgentResponse } from "@/lib/storage/tests";
-
-// define the modal’s message shape with literal unions
-type ChatMessage = { type: "user" | "agent"; text: string };
-
-// map -> AgentResponse[]
-function mapChatMessagesToConversation(chatMessages: ChatMessage[] | undefined): AgentResponse[] {
-  const msgs = Array.isArray(chatMessages) ? chatMessages : [];
-  return msgs.map<AgentResponse>((m) => {
-    const role: AgentResponse["role"] = m.type === "user" ? "user" : "agent";
-    return { role, message: m.text ?? "" };
-  });
-}
 export const TestCreation = ({
   agentInfo,
   isLoading,
@@ -43,46 +31,61 @@ export const TestCreation = ({
   onUpdateConfig,
   onRefresh,
 }: TestCreationProps) => {
+
+  // controls modal open status 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Tracks which test is being edited 
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  // Stores the fetched data for pre-populating the modal.
   const [editingTestData, setEditingTestData] = useState<any>(null);
+
+  // local array of saved tests, synced with localStorage
   const [savedTests, setSavedTests] = useState<SavedTest[]>([]);
 
+  // Hook used to create tests
   const { createTest, isCreating, error: createError } = useCreateTest();
+  // Hook used to fetch tests
   const { fetchTest, isLoading: isFetchingTest } = useFetchTest();
+  // Hooks used to update tests
   const { updateTest, isUpdating, error: updateError } = useUpdateTest();
 
+  // loads saved tests on mount from localStorage
   useEffect(() => {
     setSavedTests(loadSavedTests());
   }, []);
 
+  // Allows user to save prompt changes ( on left hand panel )
   const handlePromptSave = async (newPrompt: string) => {
     if (!agentInfo) return;
     await onUpdateConfig(agentInfo.name, newPrompt, agentInfo.first_message);
   };
 
+  // Handles both test creation and updating
   const handleTestSave = async (testData: any) => {
+    // Prepare the data
     const fullTestData = {
       ...testData,
       chatMessages: testData.chatMessages || [],
       dynamicVariables: testData.dynamicVariables || {},
     };
 
-    // Build the local conversation snapshot from the modal’s chatMessages
+    // Transforms modal's chat format to storage format for localStorage.
     const conversation = mapChatMessagesToConversation(fullTestData.chatMessages);
 
+    // For if we are updating existing test 
     if (editingTestId) {
-      // Update existing test (remote)
+      // Update existing test 
       const updatedTest = await updateTest(editingTestId, fullTestData);
 
       if (updatedTest) {
-        // Update in localStorage (MERGE: don't wipe existing fields)
+        // Update in localStorage
         updateSavedTest({
           id: editingTestId,
           title: testData.testName,
           description: (testData.successCriteria || "").slice(0, 100) + "...",
           createdAt: new Date().toISOString(),
-          conversation, // <— store the conversation history with the saved test
+          conversation, 
         });
 
         setSavedTests(loadSavedTests());
@@ -91,18 +94,22 @@ export const TestCreation = ({
         setIsModalOpen(false);
       }
     } else {
-      // Create new test (remote)
+      // Else we are creating a test case 
+
+      // Create new test 
       const createdTest = await createTest(fullTestData);
 
       if (createdTest) {
+        // Build saved tests object if successfully created
         const saved: SavedTest = {
           id: createdTest.id,
           title: testData.testName,
           description: (testData.successCriteria || "").slice(0, 100) + "...",
           createdAt: new Date().toISOString(),
-          conversation, // <— store the conversation history with the saved test
+          conversation, 
         };
 
+        // Save to local storage
         addSavedTest(saved);
         setSavedTests(loadSavedTests());
         setIsModalOpen(false);
@@ -111,7 +118,6 @@ export const TestCreation = ({
   };
 
   const handleEditTest = async (testId: string) => {
-    console.log("Editing test:", testId);
 
     // Fetch the full test data from ElevenLabs
     const testData = await fetchTest(testId);
@@ -137,7 +143,6 @@ export const TestCreation = ({
         })),
         dynamicVariables: testData.dynamic_variables || testData.dynamicVariables || {},
       };
-
 
       setEditingTestId(testId);
       setEditingTestData(transformedData);
@@ -241,14 +246,6 @@ export const TestCreation = ({
                         {t.title}
                       </CardTitle>
                       <p className="text-sm text-gray-600 mb-3">{t.description}</p>
-
-                      {/* Optional: show a tiny hint if conversation is saved */}
-                      {Array.isArray(t.conversation) && t.conversation.length > 0 && (
-                        <p className="text-xs text-gray-500 mb-2">
-                          Saved conversation turns: {t.conversation.length}
-                        </p>
-                      )}
-
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
