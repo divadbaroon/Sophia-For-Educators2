@@ -140,20 +140,21 @@ export function FeedbackPanelCondition1({
 
   const filteredItems = selectedLine
     ? feedbackData.items.filter((item) => {
+        // Show items that have the selected line in their lineNumbers
         if (item.lineNumbers?.includes(selectedLine)) {
           return true
         }
-        const isPassedLine = !feedbackData.items.some(
-          (errorItem) =>
-            errorItem.lineNumbers?.includes(selectedLine) &&
-            (errorItem.severity === "error" || errorItem.severity === "warning"),
-        )
-        if (isPassedLine && item.severity === "success" && !item.lineNumbers?.length) {
-          return true
-        }
         return false
+      }).sort((a, b) => {
+        // Sort errors first, then warnings, then success
+        const severityOrder = { 'error': 0, 'warning': 1, 'success': 2 }
+        return severityOrder[a.severity] - severityOrder[b.severity]
       })
-    : []
+    : feedbackData.items.sort((a, b) => {
+        // Sort errors first, then warnings, then success
+        const severityOrder = { 'error': 0, 'warning': 1, 'success': 2 }
+        return severityOrder[a.severity] - severityOrder[b.severity]
+      })
 
   const ProgressStepper = () => {
     const progressSteps = steps || [
@@ -275,6 +276,46 @@ export function FeedbackPanelCondition1({
             </CollapsibleContent>
           </Collapsible>
 
+          {/* Test Context Section - Combined Scenario and Student Profile */}
+          {(selectedProblem.scenarioOverview || selectedProblem.studentProfilePrompt) && (
+            <Collapsible open={expandedSections.has("context")} onOpenChange={() => toggleSection("context")}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
+                    expandedSections.has("context")
+                      ? "bg-muted/30 hover:bg-muted/30 border-border/30"
+                      : "hover:bg-muted/50 hover:border-border",
+                  )}
+                >
+                  Test Context
+                  {expandedSections.has("context") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <div className="space-y-4">
+                  {selectedProblem.scenarioOverview && (
+                    <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
+                      <h4 className="font-medium text-sm text-card-foreground mb-2">Test Scenario</h4>
+                      <p className="text-muted-foreground text-pretty">{selectedProblem.scenarioOverview}</p>
+                    </div>
+                  )}
+                  {selectedProblem.studentProfilePrompt && (
+                    <div className="p-4 bg-amber-50/50 dark:bg-amber-950/20 rounded-lg border border-amber-200/50 dark:border-amber-800/50">
+                      <h4 className="font-medium text-sm text-card-foreground mb-2">Student Profile</h4>
+                      <p className="text-muted-foreground text-pretty">{selectedProblem.studentProfilePrompt}</p>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           {/* Conversation Section */}
           {selectedProblem.conversation && (
             <Collapsible open={expandedSections.has("conversation")} onOpenChange={() => toggleSection("conversation")}>
@@ -310,7 +351,7 @@ export function FeedbackPanelCondition1({
                           <Badge variant="outline" className="text-xs">
                             {turn.role === 'agent' ? 'Agent' : 'Student'}
                           </Badge>
-                          {turn.timeInCallSecs && (
+                          {turn.timeInCallSecs !== undefined && (
                             <span className="text-xs text-muted-foreground">
                               {Math.floor(turn.timeInCallSecs / 60)}:{(turn.timeInCallSecs % 60).toString().padStart(2, '0')}
                             </span>
@@ -683,7 +724,7 @@ export function FeedbackPanelCondition1({
                         <h3 className="font-medium text-card-foreground text-balance">{item.title}</h3>
                         <Icon className={cn("w-5 h-5 shrink-0", config.iconColor)} />
                       </div>
-                      {item.lineNumbers && (
+                      {item.lineNumbers && item.lineNumbers.length > 0 && (
                         <div className="flex gap-1 mt-1 mb-2">
                           {item.lineNumbers.map((lineNum) => (
                             <Badge
