@@ -27,7 +27,7 @@ const ConditionTwoPage = () => {
   const [currentStep, setCurrentStep] = useState(0)
   const steps = ["Setting up test cases", "Running test cases", "Processing results"]
 
-  //Tracks whether tests have been completed
+  // Tracks whether tests have been completed
   const [testsRun, setTestsRun] = useState(false)
   const [isRunningTests, setIsRunningTests] = useState(false)
   // Holds the test execution results
