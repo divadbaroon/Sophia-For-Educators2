@@ -71,6 +71,16 @@ const ConditionOnePage = () => {
     handleFetchConfig()
   }, [])
 
+  useEffect(() => {
+    if (agentInfo?.prompt) {
+      console.log("=== PROMPT WITH LINE NUMBERS (from ConditionOnePage) ===")
+      agentInfo.prompt.split("\n").forEach((line, index) => {
+        console.log(`${index + 1}: ${line}`)
+      })
+      console.log("=========================================================")
+    }
+  }, [agentInfo?.prompt])
+
   return (
     <main className="wrapper-full min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
