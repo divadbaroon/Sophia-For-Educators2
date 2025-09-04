@@ -1,3 +1,5 @@
+import { PromptData } from "@/components/promptSidePanel/types"
+
 export interface SessionReplayData {
   // Session metadata
   sessionInfo: {
@@ -263,4 +265,15 @@ export interface FeedbackPanelProps {
   isRunningTests?: boolean
   currentStep?: number
   steps?: string[]
+}
+
+export interface FeedbackPanelPropsCondition1 {
+  feedbackData: FeedbackData
+  selectedLine: number | null
+  condition?: string
+  onClearSelection?: () => void
+  isRunningTests?: boolean
+  currentStep?: number
+  steps?: string[]
+  promptData: PromptData
 }
