@@ -15,17 +15,15 @@ interface PromptPanelProps {
   promptData: PromptData
   selectedLine: number | null
   onLineSelect: (line: number | null) => void
-  condition?: "1" | "2" | "test-creation"
   isRunningTests?: boolean
-  onPromptSave?: (newPrompt: string) => Promise<void> 
-  isSaving?: boolean 
+  onPromptSave?: (newPrompt: string) => Promise<void>
+  isSaving?: boolean
 }
 
 export function PromptPanel({
   promptData,
   selectedLine,
   onLineSelect,
-  condition = "1",
   isRunningTests = false,
   onPromptSave,
   isSaving = false,
@@ -141,8 +139,8 @@ export function PromptPanel({
                   line.includes("Teaching Style"))
               const isPassed = !isHighlighted && line.trim() !== "" && !isSectionHeader
 
-              const showHighlighting = condition === "1" && !isRunningTests
-              const isClickable = condition === "1" && !isRunningTests
+              const showHighlighting = !isRunningTests
+              const isClickable = !isRunningTests
 
               return (
                 <div
