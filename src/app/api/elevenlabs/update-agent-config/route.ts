@@ -5,11 +5,11 @@ export async function PATCH(req: NextRequest) {
     console.log('💾 Updating agent configuration...');
     
     const body = await req.json();
-    const { name, prompt, first_message } = body;
+    const { prompt, first_message } = body;
 
-    if (!name || !prompt) {
+    if (!prompt) {
       return NextResponse.json(
-        { error: 'Name and prompt are required' },
+        { error: 'Prompt is required' },
         { status: 400 }
       );
     }
@@ -32,7 +32,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updatePayload = {
-      name: name,
       conversation_config: {
         agent: {
           first_message: first_message || "",
@@ -45,7 +44,6 @@ export async function PATCH(req: NextRequest) {
 
     console.log('📤 Sending update to ElevenLabs:', {
       agentId,
-      nameLength: name.length,
       promptLength: prompt.length,
       hasFirstMessage: !!first_message
     });
@@ -74,7 +72,6 @@ export async function PATCH(req: NextRequest) {
     
     console.log('✅ Agent configuration updated successfully:', {
       agentId: updatedAgentData.agent_id,
-      name: updatedAgentData.name,
       hasPrompt: !!updatedAgentData.conversation_config?.agent?.prompt?.prompt
     });
 
