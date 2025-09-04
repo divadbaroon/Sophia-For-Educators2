@@ -14,6 +14,35 @@ interface PromptData {
   highlightedLines: number[]
 }
 
+// Enhanced test state interface
+export interface TestState {
+  testId: string
+  testName: string
+  componentName: string
+  evaluationResults: Record<string, {
+    criteriaId: string
+    result: 'success' | 'failure' // Remove 'unknown' from here
+    rationale: string
+  }>
+  sourceLines: number[]
+  selectedProfileId: string
+  selectedScenarioId: string
+  scenarioOverview: string
+  studentProfilePrompt: string
+  conversation: Array<{
+    role: 'agent' | 'user'
+    message: string
+    timeInCallSecs?: number
+    multivoice_message?: any
+    toolCalls?: any[]
+    toolResults?: any[]
+    interrupted?: boolean
+  }>
+  finalResult: 'passed' | 'failed'
+  transcriptSummary?: string
+  callSuccessful?: string
+}
+
 interface TestResult {
   testId: string
   componentName: string
@@ -42,8 +71,12 @@ export function ValidationInterfaceCondition1({
   agentInfo,
   isSaving = false,
   onUpdateConfig,
-  testResults = []
-}: ValidationInterfaceCondition1Props & { testResults?: TestResult[] }) {
+  testResults = [],
+  enhancedTestResults = [] // Add this new prop
+}: ValidationInterfaceCondition1Props & { 
+  testResults?: TestResult[]
+  enhancedTestResults?: TestState[] 
+}) {
   const [selectedLine, setSelectedLine] = useState<number | null>(null)
   const [promptData, setPromptData] = useState<PromptData>({
     title: "System Prompt",
@@ -55,41 +88,46 @@ export function ValidationInterfaceCondition1({
     items: []
   })
 
-  // Convert test results to feedback data
+  // Convert enhanced test results to feedback data
   useEffect(() => {
-    if (testResults && testResults.length > 0) {
-      const passed = testResults.filter(test => test.success).length
-      const failed = testResults.filter(test => !test.success).length
+    if (enhancedTestResults && enhancedTestResults.length > 0) {
+      const passed = enhancedTestResults.filter(test => test.finalResult === 'passed').length
+      const failed = enhancedTestResults.filter(test => test.finalResult === 'failed').length
       
-      const items: FeedbackItem[] = testResults.map((test) => ({
-        id: test.testId,
-        title: test.componentName,
-        description: test.analysis?.transcriptSummary || `Test for ${test.componentName}`,
-        severity: test.success ? 'success' : 'error' as const,
-        lineNumbers: [],
-        evaluationResults: test.evaluationResults || test.analysis?.evaluationCriteriaResults,
-        conversation: test.conversation, 
-        analysis: test.analysis, 
-        problemOverview: test.success 
-          ? `${test.componentName} test passed successfully`
-          : `${test.componentName} test failed`,
-        suggestedChange: test.success ? undefined : {
+      const items: FeedbackItem[] = enhancedTestResults.map((testState) => ({
+        id: testState.testId,
+        title: testState.testName,
+        description: testState.transcriptSummary || `Test for ${testState.componentName}`,
+        severity: testState.finalResult === 'passed' ? 'success' : 'error' as const,
+        lineNumbers: testState.sourceLines, // Now uses actual source lines!
+        evaluationResults: testState.evaluationResults,
+        conversation: testState.conversation,
+        scenarioOverview: testState.scenarioOverview,
+        studentProfilePrompt: testState.studentProfilePrompt,
+        analysis: {
+          transcriptSummary: testState.transcriptSummary,
+          callSuccessful: testState.callSuccessful
+        },
+        problemOverview: testState.finalResult === 'passed'
+          ? `${testState.componentName} test passed successfully`
+          : `${testState.componentName} test failed`,
+        suggestedChange: testState.finalResult === 'passed' ? undefined : {
           before: "Current implementation",
           after: "Suggested improvement based on test failure",
-          explanation: `Test failed: ${test.analysis?.transcriptSummary || 'No details available'}`
+          explanation: `Test failed: ${testState.transcriptSummary || 'No details available'}`
         },
-        evidence: test.success 
+        evidence: testState.finalResult === 'passed'
           ? "Test case passed successfully"
-          : `Test case failed: ${test.analysis?.transcriptSummary || 'No details available'}`,
-        recommendation: test.success 
+          : `Test case failed: ${testState.transcriptSummary || 'No details available'}`,
+        recommendation: testState.finalResult === 'passed'
           ? "Continue with current approach - this component is working well"
-          : `Review and improve ${test.componentName} implementation based on test failure`,
+          : `Review and improve ${testState.componentName} implementation based on test failure`,
         exampleVideos: []
       }))
 
       setFeedbackData({
         summary: { 
-          total: testResults.length, 
+          total: enhancedTestResults.length, 
           passed, 
           errors: failed, 
           warnings: 0 
@@ -102,35 +140,36 @@ export function ValidationInterfaceCondition1({
         items: []
       })
     }
-  }, [testResults])
+  }, [enhancedTestResults])
 
-  // Update promptData when agentInfo changes
+  // Update promptData when agentInfo changes - now uses actual source lines
   useEffect(() => {
-    if (agentInfo?.prompt) {
-      const failedTests = testResults?.filter(test => !test.success) || []
-      const passedTests = testResults?.filter(test => test.success) || []
-      
+    if (agentInfo?.prompt && enhancedTestResults && enhancedTestResults.length > 0) {
       const highlightedLines: number[] = []
-      if (failedTests.length > 0) {
-        highlightedLines.push(5, 8, 12)
-      }
-      if (passedTests.length > 0) {
-        highlightedLines.push(2, 15, 20)
-      }
+      
+      // Add source lines for failed tests
+      enhancedTestResults.forEach(testState => {
+        if (testState.finalResult === 'failed') {
+          highlightedLines.push(...testState.sourceLines)
+        }
+      })
+
+      // Remove duplicates
+      const uniqueHighlightedLines = [...new Set(highlightedLines)]
 
       setPromptData({
         title: "System Prompt",
         content: agentInfo.prompt.split("\n"),
-        highlightedLines
+        highlightedLines: uniqueHighlightedLines
       })
-    } else {
+    } else if (agentInfo?.prompt) {
       setPromptData({
         title: "System Prompt",
-        content: [],
+        content: agentInfo.prompt.split("\n"),
         highlightedLines: []
       })
     }
-  }, [agentInfo?.prompt, testResults])
+  }, [agentInfo?.prompt, enhancedTestResults])
 
   const handlePromptSave = async (newPrompt: string) => {
     if (!agentInfo || !onUpdateConfig) return
@@ -151,6 +190,7 @@ export function ValidationInterfaceCondition1({
                 onPromptSave={handlePromptSave}
                 isSaving={isSaving}
                 testResults={testResults}
+                enhancedTestResults={enhancedTestResults} // Pass enhanced results
               />
             ) : (
               <div className="flex items-center justify-center h-full">
