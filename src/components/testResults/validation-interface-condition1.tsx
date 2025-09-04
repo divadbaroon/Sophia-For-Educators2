@@ -1,16 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { Card } from "@/components/ui/card"
 
-import { FeedbackPanel } from "@/components/feedbackPanel/feedback-panel-condition1"
+import { FeedbackPanelCondition1 } from "@/components/feedbackPanel/feedback-panel-condition1"
 import { PromptPanelCondition1 } from "@/components/promptSidePanel/prompt-panel-condition1"
 
 import { mockFeedbackData } from "@/lib/mock-data"
 
 import { ValidationInterfaceCondition1Props } from "./types"
+
+interface PromptData {
+  title: string
+  content: string[]
+  highlightedLines: number[]
+}
 
 export function ValidationInterfaceCondition1({ 
   isRunningTests, 
@@ -21,17 +27,28 @@ export function ValidationInterfaceCondition1({
   onUpdateConfig 
 }: ValidationInterfaceCondition1Props) {
   const [selectedLine, setSelectedLine] = useState<number | null>(null)
-
-  // Transform agent prompt to PromptData format
-  const promptData = agentInfo ? {
-    title: "System Prompt",
-    content: agentInfo.prompt ? agentInfo.prompt.split("\n") : [],
-    highlightedLines: [] // You might want to populate this based on test results
-  } : {
+  const [promptData, setPromptData] = useState<PromptData>({
     title: "System Prompt",
     content: [],
     highlightedLines: []
-  }
+  })
+
+  // Update promptData when agentInfo changes
+  useEffect(() => {
+    if (agentInfo?.prompt) {
+      setPromptData({
+        title: "System Prompt",
+        content: agentInfo.prompt.split("\n"),
+        highlightedLines: [] // You can populate this based on test results/feedback
+      })
+    } else {
+      setPromptData({
+        title: "System Prompt",
+        content: [],
+        highlightedLines: []
+      })
+    }
+  }, [agentInfo?.prompt])
 
   const handlePromptSave = async (newPrompt: string) => {
     if (!agentInfo || !onUpdateConfig) return
@@ -68,13 +85,14 @@ export function ValidationInterfaceCondition1({
         {/* Right Panel - Feedback Display */}
         <ResizablePanel defaultSize={50} minSize={30}>
           <Card className="h-full min-h-[550px] border border-border">
-            <FeedbackPanel
+            <FeedbackPanelCondition1
               feedbackData={mockFeedbackData}
               selectedLine={selectedLine}
               onClearSelection={() => setSelectedLine(null)}
               isRunningTests={isRunningTests}
               currentStep={currentStep}
               steps={steps}
+              promptData={promptData} 
             />
           </Card>
         </ResizablePanel>
