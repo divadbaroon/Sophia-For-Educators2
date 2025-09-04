@@ -31,6 +31,9 @@ const ConditionOnePage = () => {
   const [testsRun, setTestsRun] = useState(false)
   const [isRunningTests, setIsRunningTests] = useState(false)
 
+  const [preparedTests, setPreparedTests] = useState(null)
+
+
   // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
   // Update agent configuration
@@ -115,12 +118,75 @@ const ConditionOnePage = () => {
       console.log("🎯 Unit tests generated:", unitTestData.summary)
       console.log("📝 Test cases:", testCases)
     }
+
+    // NEW: Step 2.5: Prepare test data for ElevenLabs execution
+    console.log("🔧 Preparing test execution data...")
+    
+    const preparedTestData = testCases?.map((testCase: any) => {
+      // Find the matching student profile
+      const studentProfile = simulatedStudentProfiles.find(
+        profile => profile.id === testCase.selectedProfileId
+      )
+      
+      // Find the matching scenario
+      const scenario = scenarioTemplates.find(
+        template => template.scenarioId === testCase.selectedScenarioId
+      )
+      
+      if (!studentProfile || !scenario) {
+        console.warn(`Missing data for test ${testCase.testId}:`, {
+          profileFound: !!studentProfile,
+          scenarioFound: !!scenario
+        })
+        return null
+      }
+
+      return {
+        testId: testCase.testId,
+        componentName: testCase.componentName,
+        
+        // ElevenLabs simulation configuration
+        simulatedUserConfig: {
+          prompt: {
+            prompt: studentProfile.prompt,
+            llm: 'gpt-4o',
+            temperature: 0.7,
+          },
+        },
+        
+        // Agent context (the dynamic variables)
+        agentContext: {
+          task_description: scenario.taskDescription,
+          student_code: scenario.studentCode,
+          execution_output: scenario.executionOutput
+        },
+        
+        // Test execution details
+        conversationStarter: testCase.conversationStarter,
+        evaluationCriteria: testCase.evaluationCriteria,
+        
+        // Metadata for tracking
+        selectedProfileId: testCase.selectedProfileId,
+        selectedScenarioId: testCase.selectedScenarioId
+      }
+    }).filter(Boolean) // Remove any null entries
+    
+    setPreparedTests(preparedTestData)
+    console.log("✅ Prepared", preparedTestData?.length, "tests for execution")
+
+    // Log all prepared tests as one object
+    console.log("📋 ALL PREPARED TESTS:", {
+      totalTests: preparedTestData?.length,
+      tests: preparedTestData
+    })
     
     // Step 3: Running test cases  
     setCurrentStep(2)
     console.log("🚀 Executing test cases...")
-    // TODO: Execute the generated test cases with ElevenLabs
-    // This is where you'd call ElevenLabs API for each test case
+    // TODO: Execute the prepared tests with ElevenLabs
+    // for (const test of preparedTestData) {
+    //   await executeElevenLabsTest(test)
+    // }
     
     // Step 4: Remediating failures
     setCurrentStep(3)
