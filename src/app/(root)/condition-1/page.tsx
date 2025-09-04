@@ -33,6 +33,8 @@ const ConditionOnePage = () => {
 
   const [preparedTests, setPreparedTests] = useState(null)
 
+  const [testResults, setTestResults] = useState([])
+
   // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
   // Update agent configuration
@@ -201,6 +203,8 @@ const ConditionOnePage = () => {
     const simulationData = await simulationResponse.json()
     console.log("🎯 Simulation results:", simulationData.summary)
     console.log("📊 Detailed results:", simulationData.results)
+
+    setTestResults(simulationData.results)
     
     // Step 4: Remediating failures
     setCurrentStep(3)
@@ -322,6 +326,7 @@ const ConditionOnePage = () => {
                       agentInfo={agentInfo}
                       isSaving={isSaving}
                       onUpdateConfig={handleUpdateConfig}
+                      testResults={testResults}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
