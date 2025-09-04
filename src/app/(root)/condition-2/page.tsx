@@ -16,19 +16,32 @@ import { loadSavedTests } from "@/lib/storage/tests"
 import { AgentInfo } from "@/components/configuration/types"
 
 const ConditionTwoPage = () => {
-  const [activeTab, setActiveTab] = useState<"configuration" | "testCreation" | "validation">("configuration")
-  const [testsRun, setTestsRun] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [isRunningTests, setIsRunningTests] = useState(false)
+
+  // Stores the agent configuration data
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null)
+
+  // Controls which tab view is shown (configuration, testCreation, validation)
+  const [activeTab, setActiveTab] = useState<"configuration" | "testCreation" | "validation">("configuration")
+
+  // Manages the test execution progress
+  const [currentStep, setCurrentStep] = useState(0)
+  const steps = ["Setting up test cases", "Running test cases", "Processing results"]
+
+  //Tracks whether tests have been completed
+  const [testsRun, setTestsRun] = useState(false)
+  const [isRunningTests, setIsRunningTests] = useState(false)
+  // Holds the test execution results
   const [testResults, setTestResults] = useState<any>(null)
 
+  // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
+  // Update agent configuration
   const { updateAgentConfig, isSaving, error: updateError } = useUpdateAgentConfig()
+
+  // Executes tests via ElevenLabs API
   const { runTests, isRunning: isRunningTestsAPI, error: runTestsError } = useRunTests()
 
   const error = fetchError || updateError || runTestsError
-  const steps = ["Setting up test cases", "Running test cases", "Processing results"]
 
   // Load agent config on component mount
   const handleFetchConfig = async () => {
@@ -38,7 +51,7 @@ const ConditionTwoPage = () => {
     }
   }
 
-  // Update agent config
+  // Updates agent configuration and refreshes local state
   const handleUpdateConfig = async (name: string, prompt: string, firstMessage: string) => {
     const updatedAgentData = await updateAgentConfig(name, prompt, firstMessage)
     if (updatedAgentData) {
@@ -47,63 +60,57 @@ const ConditionTwoPage = () => {
     return updatedAgentData
   }
 
+  // Handles core test execution
   const handleRunTests = async () => {
-  if (!agentInfo?.agent_id) {
-    console.error('No agent ID available');
-    return;
-  }
-
-  // Get saved test IDs from localStorage
-  const savedTests = loadSavedTests();
-  const testIds = savedTests.map(test => test.id);
-
-  if (testIds.length === 0) {
-    console.error('No tests available to run');
-    // You might want to show a user-friendly message here
-    return;
-  }
-
-  setActiveTab("validation");
-  setIsRunningTests(true);
-  setCurrentStep(0);
-  setTestResults(null);
-
-  try {
-    // Step 1: Setting up test cases
-    setCurrentStep(0);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Step 2: Running test cases and awaiting completion
-    setCurrentStep(1);
-    console.log('🚀 Starting test execution and awaiting results...');
-    
-    const runData = {
-      agentId: agentInfo.agent_id,
-      testIds: testIds
-      // Tests will run against the agent's current saved configuration
-    };
-
-    // This will now poll until completion or until agent_responses are available
-    const testRunResponse = await runTests(runData);
-    
-    if (testRunResponse) {
-      // Step 3: Processing and displaying results
-      setCurrentStep(2);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Log the complete results for debugging
-      console.log('📊 Complete test results:', JSON.stringify(testRunResponse, null, 2));
-      
-      setTestResults(testRunResponse);
-      console.log('📊 All test results received and processed');
-      setTestsRun(true);
+    if (!agentInfo?.agent_id) {
+      console.error('No agent ID available');
+      return;
     }
-  } catch (error) {
-    console.error('❌ Test execution failed:', error);
-  } finally {
-    setIsRunningTests(false);
-  }
-};
+
+    // Get saved test IDs from localStorage
+    const savedTests = loadSavedTests();
+    const testIds = savedTests.map(test => test.id);
+
+    if (testIds.length === 0) {
+      console.error('No tests available to run');
+      return;
+    }
+
+    // After agentId and saved tests are validated, switch to validation tab
+    setActiveTab("validation");
+
+    // Prepare UI for test execution
+    setIsRunningTests(true); // Show loading, disable button
+    setCurrentStep(0); // Reset progress  
+    setTestResults(null); // Clear old results
+
+    try {
+      // Update progress indicator to step 1
+      setCurrentStep(1);
+      console.log('🚀 Starting test execution and awaiting results...');
+      
+      // Prepare the payload with agent ID and test IDs from localStorage
+      const runData = {
+        agentId: agentInfo.agent_id,
+        testIds: testIds
+      };
+
+      // This will now poll until completion or until agent_responses are available
+      const testRunResponse = await runTests(runData);
+      
+      if (testRunResponse) {
+        // Update step in UI
+        setCurrentStep(2);
+        // Set test results
+        setTestResults(testRunResponse);
+        setTestsRun(true);
+      }
+    } catch (error) {
+      console.error('❌ Test execution failed:', error);
+    } finally {
+      setIsRunningTests(false);
+    }
+  };
 
   useEffect(() => {
     handleFetchConfig()
