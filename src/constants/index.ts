@@ -1,4 +1,4 @@
-import { Database, Hash, FileText, Code, LucideIcon } from 'lucide-react';
+import { Database, Hash, FileText, Code, LucideIcon, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 
 export const conceptIcons: Record<string, { icon: LucideIcon; className: string }> = {
   "Dictionary Operations": {
@@ -183,4 +183,35 @@ export const emotionColors: Record<string, string> = {
  sympathy: "#7f88e0",
  tiredness: "#757575",
  triumph: "#ec8132"
+}
+
+export const severityConfig = {
+  error: {
+    icon: AlertCircle,
+    color: "text-[var(--color-error)]",
+    iconColor: "text-[var(--color-error)]",
+    bgColor: "bg-[var(--color-error)]/10",
+    borderColor: "border-[var(--color-error)]/20",
+  },
+  warning: {
+    icon: AlertTriangle,
+    color: "text-[var(--color-warning)]",
+    iconColor: "text-[var(--color-warning)]",
+    bgColor: "bg-[var(--color-warning)]/10",
+    borderColor: "border-[var(--color-warning)]/20",
+  },
+  success: {
+    icon: CheckCircle,
+    color: "text-[var(--color-success)]",
+    iconColor: "text-[var(--color-success)]",
+    bgColor: "bg-[var(--color-success)]/10",
+    borderColor: "border-[var(--color-success)]/20",
+  },
+  info: {
+    icon: Info,
+    color: "text-[var(--color-neutral)]",
+    iconColor: "text-[var(--color-neutral)]",
+    bgColor: "bg-[var(--color-neutral)]/10",
+    borderColor: "border-[var(--color-neutral)]/20",
+  },
 }

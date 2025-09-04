@@ -192,3 +192,75 @@ export interface SimulationContextType {
   codeErrorsUpToCurrentTime: any[]
   taskProgressUpToCurrentTime: any[]
 }
+
+export type AgentResponse = {
+  role: "user" | "agent" | "tool";
+  message?: string | null;
+  original_message?: string | null;
+  time_in_call_secs?: number | null;
+  source_medium?: string | null;
+  tool_calls?: any[] | null;
+  tool_results?: any[] | null;
+  feedback?: { score?: string; time_in_call_secs?: number } | null;
+  llm_override?: string | null;
+  conversation_turn_metrics?: any | null;
+  rag_retrieval_info?: {
+    chunks?: Array<{ document_id?: string; chunk_id?: string; vector_distance?: number }>;
+    embedding_model?: string;
+    retrieval_query?: string;
+    rag_latency_secs?: number;
+  } | null;
+  interrupted?: boolean;
+  llm_usage?: any | null;
+};
+
+export interface FeedbackItem {
+  id: string
+  severity: "error" | "warning" | "success" | "info"
+  title: string
+  description: string
+  evidence: string
+  recommendation: string
+  lineNumbers?: number[]
+  problemOverview?: string
+  exampleVideos?: Array<{
+    id: string
+    title: string
+    description: string
+    thumbnailUrl: string
+    videoUrl: string
+  }>
+  suggestedChange?: {
+    before: string
+    after: string
+    explanation: string
+  }
+  // Add these new fields for real test data
+  conversation?: AgentResponse[];
+  testMetadata?: {
+    testId: string
+    status: string
+    runId: string
+    lastUpdated: number
+  }
+}
+
+export interface FeedbackData {
+  summary: {
+    total: number
+    errors: number
+    warnings: number
+    passed: number
+  }
+  items: FeedbackItem[]
+}
+
+export interface FeedbackPanelProps {
+  feedbackData: FeedbackData
+  selectedLine: number | null
+  condition?: string
+  onClearSelection?: () => void
+  isRunningTests?: boolean
+  currentStep?: number
+  steps?: string[]
+}
