@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { TestCreationModal } from "@/components/testCreation/TestCreationModal";
-import { PromptPanel } from "@/components/promptSidePanel/prompt-panel";
+import { PromptPanel } from "@/components/promptSidePanel/prompt-panel-condition2";
 
 import { Edit } from "lucide-react";
 

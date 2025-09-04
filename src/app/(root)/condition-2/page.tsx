@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 import { AgentConfiguration } from "@/components/configuration/AgentConfiguration"
-import { ValidationInterface } from "@/components/testResults/validation-interface"
+import { ValidationInterface } from "@/components/testResults/validation-interface-condition2"
 import { TestCreation } from "@/components/testCreation/test-creation"
 
 import { useFetchAgentConfig, useUpdateAgentConfig } from "@/lib/hooks/configuration/useAgentConfiguration"

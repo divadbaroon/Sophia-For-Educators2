@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Card } from "@/components/ui/card";
 
-import { PromptPanel } from "@/components/promptSidePanel/prompt-panel";
-import { FeedbackPanelCondition2 } from "@/components/feedbackPanel/feedback-panel";
+import { PromptPanel } from "@/components/promptSidePanel/prompt-panel-condition2";
+import { FeedbackPanelCondition2 } from "@/components/feedbackPanel/feedback-panel-condition2";
 
 import { loadSavedTests } from "@/lib/storage/tests";
 
