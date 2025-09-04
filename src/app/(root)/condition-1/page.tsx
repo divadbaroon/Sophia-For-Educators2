@@ -33,7 +33,6 @@ const ConditionOnePage = () => {
 
   const [preparedTests, setPreparedTests] = useState(null)
 
-
   // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
   // Update agent configuration
@@ -149,7 +148,7 @@ const ConditionOnePage = () => {
         simulatedUserConfig: {
           prompt: {
             prompt: studentProfile.prompt,
-            llm: 'gpt-4o',
+            llm: 'claude-3-5-sonnet',
             temperature: 0.7,
           },
         },
@@ -180,13 +179,28 @@ const ConditionOnePage = () => {
       tests: preparedTestData
     })
     
-    // Step 3: Running test cases  
+    // Step 3: Running test cases with ElevenLabs
     setCurrentStep(2)
-    console.log("🚀 Executing test cases...")
-    // TODO: Execute the prepared tests with ElevenLabs
-    // for (const test of preparedTestData) {
-    //   await executeElevenLabsTest(test)
-    // }
+    console.log("🚀 Executing test cases with ElevenLabs...")
+
+    const simulationResponse = await fetch('/api/elevenlabs/simulate-conversations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        agentId: agentInfo?.agent_id,
+        preparedTests: preparedTestData
+      })
+    })
+
+    if (!simulationResponse.ok) {
+      throw new Error(`Simulation failed: ${simulationResponse.statusText}`)
+    }
+
+    const simulationData = await simulationResponse.json()
+    console.log("🎯 Simulation results:", simulationData.summary)
+    console.log("📊 Detailed results:", simulationData.results)
     
     // Step 4: Remediating failures
     setCurrentStep(3)
