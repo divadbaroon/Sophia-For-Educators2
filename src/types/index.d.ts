@@ -216,59 +216,35 @@ export type AgentResponse = {
   llm_usage?: any | null;
 };
 
-export interface FeedbackItem {
+interface FeedbackItem {
   id: string
-  severity: "error" | "warning" | "success" | "info"
   title: string
   description: string
-  evidence: string
-  recommendation: string
-  lineNumbers?: number[]
+  severity: 'error' | 'warning' | 'success'
+  lineNumbers: number[]
+  evaluationResults?: Record<string, any>
+  conversation?: Array<any>
+  scenarioOverview?: string // Add this
+  studentProfilePrompt?: string // Add this
+  analysis?: {
+    transcriptSummary?: string
+    callSuccessful?: string
+  }
   problemOverview?: string
-  exampleVideos?: Array<{
-    id: string
-    title: string
-    description: string
-    thumbnailUrl: string
-    videoUrl: string
-  }>
   suggestedChange?: {
     before: string
     after: string
     explanation: string
   }
-  // Add these new fields for real test data
-  conversation?: AgentResponse[];
-  testMetadata?: {
-    testId: string
-    status: string
-    runId: string
-    lastUpdated: number
-  }
-  conversationTranscript?: Array<{
-    turn: number
-    role: string
-    message: string
-    timestamp: number
+  evidence?: string
+  recommendation?: string
+  exampleVideos?: Array<{
+    id: string
+    title: string
+    description: string
+    videoUrl: string
+    thumbnailUrl?: string
   }>
-  testMetadata?: {
-    testId: string
-    componentName: string
-    callSuccessful?: string
-    callSummaryTitle?: string
-  }
-  evaluationResults?: Record<string, any>
-  conversation?: Array<{
-    role: 'agent' | 'user'
-    message: string
-    timeInCallSecs?: number
-    // ... other conversation turn properties
-  }>
-  analysis?: {
-    callSuccessful?: string
-    transcriptSummary?: string
-    callSummaryTitle?: string
-  }
 }
 
 export interface FeedbackData {
