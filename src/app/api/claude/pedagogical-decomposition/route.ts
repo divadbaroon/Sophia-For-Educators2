@@ -15,11 +15,13 @@ When you encounter behaviors that require visual elements, translate them into v
 For each pedagogical component you identify, provide:
 1. **Component Name**: Clear, descriptive name for the pedagogical behavior
 2. **Component Description**: What specific teaching behavior this represents  
-3. **Source Lines**: Which line numbers from the prompt define this component
+3. **Source Lines**: Which line number from the prompt define this component, ONLY RESPOND WITH ONE LINE NUMBER PER COMPONENT - USE THE LINE NUMBERS SHOWN IN THE PROMPT
 4. **Testable Behaviors**: Specific, observable actions in text conversations
 5. **Failure Indicators**: How to detect failure in conversation transcripts
 
 Prioritize components that can be reliably tested through student-agent dialogue rather than requiring external dependencies or extended time periods.
+
+IGNORE THESE SECTIONS: # Environment  and # Current Student Context
 
 Return your analysis as JSON in this format:
 {
@@ -27,7 +29,7 @@ Return your analysis as JSON in this format:
     {
       "name": "Component Name",
       "description": "What this component does",
-      "sourceLines": [2, 8, 11],
+      "sourceLines": [2],
       "testableBehaviors": ["Specific behavior 1", "Specific behavior 2"],
       "failureIndicators": ["How to detect failure 1", "How to detect failure 2"]
     }
@@ -50,14 +52,23 @@ export async function POST(req: NextRequest) {
 
     console.log('📨 Received instructor prompt for decomposition');
 
+    // Add line numbers to the prompt so Claude sees the same numbering as the UI
+   const promptWithLineNumbers: string = instructorPrompt
+    .split('\n')
+    .map((line: string, index: number): string => `${index + 1}: ${line}`)
+    .join('\n');
+
+    console.log('📋 Prompt with line numbers:');
+    console.log(promptWithLineNumbers);
+
     // Build the user prompt with line numbers
     const userPrompt = `Analyze the following instructor prompt and decompose it into testable pedagogical components:
 
-=== INSTRUCTOR PROMPT ===
-${instructorPrompt}
-================================
+=== INSTRUCTOR PROMPT WITH LINE NUMBERS ===
+${promptWithLineNumbers}
+===============================================
 
-Extract discrete pedagogical components that can be systematically tested.`;
+Extract discrete pedagogical components that can be systematically tested. Use the line numbers shown above in your sourceLines arrays.`;
     
     // Call AI SDK directly
     const result = await generateText({
@@ -76,6 +87,7 @@ Extract discrete pedagogical components that can be systematically tested.`;
     const response = JSON.parse(jsonText);
 
     console.log('🎯 Pedagogical decomposition completed');
+    console.log('📊 Components found:', response.components);
 
     return NextResponse.json({
       pedagogicalComponents: response.components
