@@ -245,6 +245,30 @@ export interface FeedbackItem {
     runId: string
     lastUpdated: number
   }
+  conversationTranscript?: Array<{
+    turn: number
+    role: string
+    message: string
+    timestamp: number
+  }>
+  testMetadata?: {
+    testId: string
+    componentName: string
+    callSuccessful?: string
+    callSummaryTitle?: string
+  }
+  evaluationResults?: Record<string, any>
+  conversation?: Array<{
+    role: 'agent' | 'user'
+    message: string
+    timeInCallSecs?: number
+    // ... other conversation turn properties
+  }>
+  analysis?: {
+    callSuccessful?: string
+    transcriptSummary?: string
+    callSummaryTitle?: string
+  }
 }
 
 export interface FeedbackData {
