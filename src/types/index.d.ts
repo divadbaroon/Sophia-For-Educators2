@@ -216,16 +216,16 @@ export type AgentResponse = {
   llm_usage?: any | null;
 };
 
-interface FeedbackItem {
+export interface FeedbackItem {
   id: string
   title: string
   description: string
   severity: 'error' | 'warning' | 'success'
-  lineNumbers: number[]
+  lineNumbers?: number[]
   evaluationResults?: Record<string, any>
   conversation?: Array<any>
-  scenarioOverview?: string // Add this
-  studentProfilePrompt?: string // Add this
+  scenarioOverview?: string
+  studentProfilePrompt?: string
   analysis?: {
     transcriptSummary?: string
     callSuccessful?: string
@@ -238,13 +238,23 @@ interface FeedbackItem {
   }
   evidence?: string
   recommendation?: string
-  exampleVideos?: Array<{
-    id: string
-    title: string
-    description: string
-    videoUrl: string
-    thumbnailUrl?: string
-  }>
+  exampleVideos?: any[]
+  // Add this property:
+  remediationSuggestion?: {
+    analysis: {
+      pedagogicalGap: string
+      rootCause: string
+      targetedFix: string
+    }
+    suggestions: Array<{
+      changeType: 'replace' | 'add' | 'modify' | 'restructure'
+      affectedLines: number[]
+      originalContent: string
+      suggestedContent: string
+      rationale: string
+      pedagogicalPrinciple: string
+    }>
+  }
 }
 
 export interface FeedbackData {
