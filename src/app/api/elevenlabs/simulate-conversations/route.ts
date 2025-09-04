@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
           simulationSpecification: {
             simulatedUserConfig: {
               prompt: {
-                prompt: "Maintain the persona of a college student, keep your responses realisitc and not overly long and unrealisitc for a real college student to give" + test.simulatedUserConfig.prompt.prompt,
+                prompt: "Keep your responses realisitc and not overly long and unrealisitc for a real college student to give" + test.simulatedUserConfig.prompt.prompt,
                 llm: test.simulatedUserConfig.prompt.llm,
                 temperature: test.simulatedUserConfig.prompt.temperature,
               },
