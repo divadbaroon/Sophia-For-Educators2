@@ -164,7 +164,7 @@ const ConditionOnePage = () => {
           },
           body: JSON.stringify({
             pedagogicalComponents: decompositionData.pedagogicalComponents,
-            studentProfiles: simulatedStudentProfiles,
+            studentProfiles: simulatedStudentProfiles, 
             scenarioTemplates: scenarioTemplates
           })
         })
