@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -20,23 +20,35 @@ import {
 
 import { cn } from "@/lib/utils"
 
-import { FeedbackItem, FeedbackPanelProps } from "@/types"
+import { FeedbackItem, FeedbackPanelPropsCondition1 } from "@/types"
 
 import { severityConfig } from "@/constants"
 
-export function FeedbackPanel({
+export function FeedbackPanelCondition1({
   feedbackData,
   selectedLine,
   onClearSelection,
   isRunningTests,
   currentStep,
   steps,
-}: FeedbackPanelProps) {
+  promptData, 
+}: FeedbackPanelPropsCondition1) {
   const [selectedProblem, setSelectedProblem] = useState<FeedbackItem | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]))
   const [isEditingChange, setIsEditingChange] = useState(false)
   const [editedChange, setEditedChange] = useState("")
   const [showOriginal, setShowOriginal] = useState(false)
+
+  // Log prompt data when it changes
+  useEffect(() => {
+    if (promptData?.content) {
+      console.log("=== PROMPT WITH LINE NUMBERS (from FeedbackPanel) ===")
+      promptData.content.forEach((line, index) => {
+        console.log(`${index + 1}: ${line}`)
+      })
+      console.log("=======================================================")
+    }
+  }, [promptData?.content])
 
   const toggleSection = (sectionId: string) => {
     const newExpanded = new Set<string>()
@@ -99,6 +111,13 @@ export function FeedbackPanel({
 
   const handleAcceptChange = () => {
     console.log("[v0] Accepting suggested change:", editedChange)
+    
+    // Log the current prompt data for context
+    if (promptData) {
+      console.log("Current prompt data:", promptData)
+      console.log("Selected line context:", selectedLine ? promptData.content[selectedLine - 1] : "No line selected")
+    }
+    
     setIsEditingChange(false)
   }
 
