@@ -26,13 +26,6 @@ export function PromptPanelCondition1({
   // Update editedContent when promptData changes
   useEffect(() => {
     setEditedContent(promptData.content.join("\n"))
-    
-    // Console log the prompt with line numbers
-    console.log("=== PROMPT WITH LINE NUMBERS ===")
-    promptData.content.forEach((line, index) => {
-      console.log(`${index + 1}: ${line}`)
-    })
-    console.log("================================")
   }, [promptData.content])
 
   const handleSave = async () => {
