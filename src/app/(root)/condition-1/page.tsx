@@ -12,6 +12,9 @@ import { useFetchAgentConfig, useUpdateAgentConfig } from "@/lib/hooks/configura
 
 import { AgentInfo } from "@/components/configuration/types"
 
+import { scenarioTemplates } from "@/lib/testCaseData/scenarioData"
+import { simulatedStudentProfiles } from "@/lib/testCaseData/studentProfiles"
+
 const ConditionOnePage = () => {
 
   // Stores the agent configuration data
@@ -53,19 +56,85 @@ const ConditionOnePage = () => {
   }
 
   const handleRunTests = async () => {
-    setActiveTab("validation")
-    setIsRunningTests(true)
-    setCurrentStep(0)
+  setActiveTab("validation")
+  setIsRunningTests(true)
+  setCurrentStep(0)
 
-    // Simulate progress through steps
-    for (let i = 0; i < steps.length; i++) {
-      setCurrentStep(i)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+  try {
+    // Step 1: Decomposing Prompt
+    setCurrentStep(0)
+    console.log("🔍 Starting pedagogical decomposition...")
+    
+    let pedagogicalComponents = null
+    
+    if (agentInfo?.prompt) {
+      const decompositionResponse = await fetch('/api/claude/pedagogical-decomposition', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          instructorPrompt: agentInfo.prompt
+        })
+      })
+
+      if (!decompositionResponse.ok) {
+        throw new Error(`Decomposition failed: ${decompositionResponse.statusText}`)
+      }
+
+      const decompositionData = await decompositionResponse.json()
+      pedagogicalComponents = decompositionData.pedagogicalComponents
+      console.log("📋 Pedagogical components identified:", pedagogicalComponents)
     }
 
+    // Step 2: Generating Unit Tests
+    setCurrentStep(1)
+    console.log("🧪 Generating unit tests...")
+    
+    let testCases = null
+    
+    if (pedagogicalComponents) {
+      const unitTestResponse = await fetch('/api/claude/unit-test-generation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pedagogicalComponents: pedagogicalComponents,
+          studentProfiles: simulatedStudentProfiles,
+          scenarioTemplates: scenarioTemplates
+        })
+      })
+
+      if (!unitTestResponse.ok) {
+        throw new Error(`Unit test generation failed: ${unitTestResponse.statusText}`)
+      }
+
+      const unitTestData = await unitTestResponse.json()
+      testCases = unitTestData.testCases
+      console.log("🎯 Unit tests generated:", unitTestData.summary)
+      console.log("📝 Test cases:", testCases)
+    }
+    
+    // Step 3: Running test cases  
+    setCurrentStep(2)
+    console.log("🚀 Executing test cases...")
+    // TODO: Execute the generated test cases with ElevenLabs
+    // This is where you'd call ElevenLabs API for each test case
+    
+    // Step 4: Remediating failures
+    setCurrentStep(3)
+    console.log("🔧 Analyzing results and generating remediation...")
+    // TODO: Process test results and generate remediation suggestions
+
+  } catch (error) {
+    console.error("❌ Error during test execution:", error)
+    // Handle error - maybe show error state to user
+  } finally {
     setIsRunningTests(false)
     setTestsRun(true)
   }
+}
 
   useEffect(() => {
     handleFetchConfig()
