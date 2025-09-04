@@ -13,13 +13,19 @@ import { useFetchAgentConfig, useUpdateAgentConfig } from "@/lib/hooks/configura
 import { AgentInfo } from "@/components/configuration/types"
 
 const ConditionOnePage = () => {
+
   // Stores the agent configuration data
   const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null)
 
+  // Controls which tab view is shown (configuration, testCreation, validation)
   const [activeTab, setActiveTab] = useState<"configuration" | "validation">("configuration")
 
-  const [testsRun, setTestsRun] = useState(false)
+  // Manages the test execution progress
   const [currentStep, setCurrentStep] = useState(0)
+  const steps = ["Decomposing Prompt", "Setting up test cases", "Running test cases", "Remediating failures"]
+
+  // Tracks whether tests have been completed
+  const [testsRun, setTestsRun] = useState(false)
   const [isRunningTests, setIsRunningTests] = useState(false)
 
   // Get agent configuration
@@ -45,8 +51,6 @@ const ConditionOnePage = () => {
     }
     return updatedAgentData
   }
-
-  const steps = ["Decomposing Prompt", "Setting up test cases", "Running test cases", "Remediating failures"]
 
   const handleRunTests = async () => {
     setActiveTab("validation")
@@ -79,7 +83,7 @@ const ConditionOnePage = () => {
             </div>
             <Button
               onClick={handleRunTests}
-              disabled={isRunningTests}
+              disabled={isRunningTests || isLoading || !agentInfo?.agent_id}
               className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2"
             >
               {isRunningTests ? (
@@ -152,7 +156,14 @@ const ConditionOnePage = () => {
               {activeTab === "validation" && (
                 <div className="h-[600px]">
                   {testsRun || isRunningTests ? (
-                    <ValidationInterface condition="1" isRunningTests={isRunningTests} currentStep={currentStep} />
+                    <ValidationInterface 
+                      isRunningTests={isRunningTests} 
+                      currentStep={currentStep}
+                      steps={steps}
+                      agentInfo={agentInfo}
+                      isSaving={isSaving}
+                      onUpdateConfig={handleUpdateConfig}
+                    />
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <p className="text-gray-500">Click "Run Tests" to begin validation</p>
