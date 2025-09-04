@@ -110,6 +110,19 @@ export function FeedbackPanelCondition1({
     setIsEditingChange(false)
   }
 
+  const truncateToSentences = (text: string, sentenceCount: number = 3): string => {
+    if (!text) return ""
+    
+    // Split by sentence endings (., !, ?)
+    const sentences = text.match(/[^\.!?]*[\.!?]/g) || []
+    
+    if (sentences.length <= sentenceCount) {
+      return text
+    }
+    
+    return sentences.slice(0, sentenceCount).join('').trim() + '...'
+  }
+
   const handleRejectChange = () => {
     console.log("[v0] Rejecting suggested change")
     setIsEditingChange(false)
@@ -258,6 +271,92 @@ export function FeedbackPanelCondition1({
               <CollapsibleContent className="mt-3">
                 <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
                   <p className="text-muted-foreground text-pretty">{selectedProblem.problemOverview}</p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Analysis Section */}
+          {selectedProblem.evaluationResults && (
+            <Collapsible open={expandedSections.has("analysis")} onOpenChange={() => toggleSection("analysis")}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
+                    expandedSections.has("analysis")
+                      ? "bg-muted/30 hover:bg-muted/30 border-border/30"
+                      : "hover:bg-muted/50 hover:border-border",
+                  )}
+                >
+                  Evaluation Analysis
+                  {expandedSections.has("analysis") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <div className="p-4 bg-muted/20 rounded-lg border border-border/30 space-y-4">
+                  {Object.entries(selectedProblem.evaluationResults).map(([criteriaId, result]: [string, any]) => (
+                    <div key={criteriaId} className="border-b border-border/20 pb-3 last:border-b-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-medium text-sm text-card-foreground capitalize">
+                          {criteriaId.replace(/_/g, ' ')}
+                        </h4>
+                        <Badge variant={result.result === 'success' ? 'default' : 'destructive'} className="text-xs">
+                          {result.result}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{result.rationale}</p>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Conversation Section */}
+          {selectedProblem.conversation && (
+            <Collapsible open={expandedSections.has("conversation")} onOpenChange={() => toggleSection("conversation")}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
+                    expandedSections.has("conversation")
+                      ? "bg-muted/30 hover:bg-muted/30 border-border/30"
+                      : "hover:bg-muted/50 hover:border-border",
+                  )}
+                >
+                  Conversation Transcript
+                  {expandedSections.has("conversation") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <div className="p-4 bg-muted/20 rounded-lg border border-border/30 max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                    {selectedProblem.conversation.map((turn: any, index: number) => (
+                      <div key={index} className={cn(
+                        "p-3 rounded-lg",
+                        turn.role === 'agent' 
+                          ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800" 
+                          : "bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+                      )}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-xs">
+                            {turn.role === 'agent' ? 'Agent' : 'Student'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{turn.message}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -600,8 +699,10 @@ export function FeedbackPanelCondition1({
                           ))}
                         </div>
                       )}
-                      <p className="text-sm text-muted-foreground mt-1 text-pretty">{item.description}</p>
-                      {(item.problemOverview || item.exampleVideos || item.suggestedChange) && (
+                      <p className="text-sm text-muted-foreground mt-1 text-pretty">
+                        {truncateToSentences(item.description, 2)}
+                      </p>
+                        {(item.problemOverview || item.exampleVideos || item.suggestedChange) && (
                         <div className="flex gap-2 mt-2">
                           <Button
                             variant="outline"
