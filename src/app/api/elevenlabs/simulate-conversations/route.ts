@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
                 llm: test.simulatedUserConfig.prompt.llm,
                 temperature: test.simulatedUserConfig.prompt.temperature,
               },
+              firstMessage: test.conversationStarter
             },
             dynamicVariables: {
               task_description: test.agentContext.task_description,
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
             conversationGoalPrompt: criteria.conversationGoalPrompt,
             useKnowledgeBase: criteria.useKnowledgeBase || false,
           })),
-          newTurnsLimit: 8
+          newTurnsLimit: 10
         });
 
         console.log(`✅ Simulation completed for test: ${test.testId}`);
