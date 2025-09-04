@@ -57,7 +57,6 @@ export function useUpdateAgentConfig() {
   const [error, setError] = useState<string | null>(null);
 
   const updateAgentConfig = async (
-    name: string,
     prompt: string,
     first_message: string
   ): Promise<AgentInfo | null> => {
@@ -73,7 +72,6 @@ export function useUpdateAgentConfig() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
           prompt,
           first_message
         })

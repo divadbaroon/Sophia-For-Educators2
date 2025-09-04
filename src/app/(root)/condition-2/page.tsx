@@ -52,8 +52,8 @@ const ConditionTwoPage = () => {
   }
 
   // Updates agent configuration and refreshes local state
-  const handleUpdateConfig = async (name: string, prompt: string, firstMessage: string) => {
-    const updatedAgentData = await updateAgentConfig(name, prompt, firstMessage)
+  const handleUpdateConfig = async (prompt: string, firstMessage: string) => {
+    const updatedAgentData = await updateAgentConfig(prompt, firstMessage)
     if (updatedAgentData) {
       setAgentInfo(updatedAgentData)
     }

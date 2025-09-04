@@ -10,6 +10,6 @@ export interface AgentConfigurationProps {
   isLoading: boolean;
   isSaving: boolean;
   error: string | null;
-  onUpdateConfig: (name: string, prompt: string, firstMessage: string) => Promise<AgentInfo | null>;
+  onUpdateConfig: (prompt: string, firstMessage: string) => Promise<AgentInfo | null>;
   onRefresh: () => void;
 }

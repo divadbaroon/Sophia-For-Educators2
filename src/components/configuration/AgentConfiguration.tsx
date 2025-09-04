@@ -16,14 +16,11 @@ export function AgentConfiguration({
   onRefresh 
 }: AgentConfigurationProps) {
   const [isEditing, setIsEditing] = useState(false);
-  
-  const [editedName, setEditedName] = useState("");
   const [editedPrompt, setEditedPrompt] = useState("");
   const [editedFirstMessage, setEditedFirstMessage] = useState("");
 
   useEffect(() => {
     if (agentInfo) {
-      setEditedName(agentInfo.name);
       setEditedPrompt(agentInfo.prompt);
       setEditedFirstMessage(agentInfo.first_message);
     }
@@ -33,7 +30,6 @@ export function AgentConfiguration({
     if (!agentInfo) return;
 
     const updatedAgentData = await onUpdateConfig(
-      editedName,
       editedPrompt,
       editedFirstMessage
     );
@@ -49,7 +45,6 @@ export function AgentConfiguration({
 
   const handleCancel = () => {
     if (agentInfo) {
-      setEditedName(agentInfo.name);
       setEditedPrompt(agentInfo.prompt);
       setEditedFirstMessage(agentInfo.first_message);
     }
@@ -96,7 +91,7 @@ export function AgentConfiguration({
                   <Button
                     onClick={handleSave}
                     size="sm"
-                    disabled={isSaving || !editedName.trim() || !editedPrompt.trim()}
+                    disabled={isSaving || !editedPrompt.trim()}
                     className="flex items-center gap-2"
                   >
                     <Save className="w-4 h-4" />
