@@ -30,7 +30,7 @@ export interface TestState {
   componentName: string
   evaluationResults: Record<string, {
     criteriaId: string
-    result: 'success' | 'failure' // Remove 'unknown' from here
+    result: 'success' | 'failure'
     rationale: string
   }>
   sourceLines: number[]
@@ -50,6 +50,21 @@ export interface TestState {
   finalResult: 'passed' | 'failed'
   transcriptSummary?: string
   callSuccessful?: string
+  remediationSuggestion?: {
+    analysis: {
+      pedagogicalGap: string
+      rootCause: string
+      targetedFix: string
+    }
+    suggestions: Array<{
+      changeType: 'replace' | 'add' | 'modify' | 'restructure'
+      affectedLines: number[]
+      originalContent: string
+      suggestedContent: string
+      rationale: string
+      pedagogicalPrinciple: string
+    }>
+  }
 }
 
 const ConditionOnePage = () => {
@@ -73,6 +88,7 @@ const ConditionOnePage = () => {
 
   const [testResults, setTestResults] = useState([])
   const [enhancedTestResults, setEnhancedTestResults] = useState<TestState[]>([])
+  const [isGeneratingRemediation, setIsGeneratingRemediation] = useState(false)
 
   const [pedagogicalComponents, setPedagogicalComponents] = useState<PedagogicalComponent[] | null>(null)
   const [lastTestRun, setLastTestRun] = useState<{
@@ -124,6 +140,85 @@ const ConditionOnePage = () => {
     return updatedAgentData
   }
 
+  // Generate remediation suggestions for failed tests
+  const generateRemediationForResults = async (testResults: TestState[]): Promise<TestState[]> => {
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    if (!testResults.length || !pedagogicalComponents) {
+      return testResults
+    }
+    
+    setIsGeneratingRemediation(true)
+    
+    const failedTests = testResults.filter(test => test.finalResult === 'failed')
+
+    console.log(`🔍 Total tests: ${testResults.length}`)
+  console.log(`🔍 Failed tests: ${failedTests.length}`)
+  failedTests.forEach(test => {
+    console.log(`  - ${test.testId}: ${test.componentName}`)
+  })
+      
+    if (failedTests.length === 0) {
+      console.log("No failed tests to remediate")
+      setIsGeneratingRemediation(false)
+      return testResults
+    }
+    
+    console.log(`Generating remediation for ${failedTests.length} failed tests`)
+    
+    const remediationPromises = failedTests.map(async (failedTest): Promise<{ testId: string; remediation: any } | null> => {
+      try {
+        const component = pedagogicalComponents.find(comp => comp.name === failedTest.componentName)
+        if (!component) {
+          console.warn(`Component not found for test ${failedTest.testId}`)
+          return null
+        }
+        
+        const response = await fetch('/api/claude/prompt-remediation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            failedTest,
+            currentPrompt: agentInfo?.prompt,
+            pedagogicalComponent: component,
+            conversationTranscript: failedTest.conversation
+          })
+        })
+        
+        if (!response.ok) {
+          console.error(`Failed to generate remediation for test ${failedTest.testId}`)
+          return null
+        }
+        
+        const remediation = await response.json()
+        return { testId: failedTest.testId, remediation }
+      } catch (error) {
+        console.error(`Error generating remediation for test ${failedTest.testId}:`, error)
+        return null
+      }
+    })
+    
+    const remediationResults = await Promise.all(remediationPromises)
+    const validRemediations = remediationResults.filter((r): r is { testId: string; remediation: any } => r !== null)
+    
+    // Update test results with remediation suggestions
+    const updatedResults = testResults.map(test => {
+      const remediationResult = validRemediations.find(r => r.testId === test.testId)
+      if (remediationResult) {
+        return {
+          ...test,
+          remediationSuggestion: remediationResult.remediation
+        }
+      }
+      return test
+    })
+    
+    console.log(`Generated remediation for ${validRemediations.length} failed tests`)
+    setIsGeneratingRemediation(false)
+    
+    return updatedResults
+  }
+
   const handleRunTests = async (rerunFailedOnly: boolean = false) => {
     setActiveTab("validation")
     setIsRunningTests(true)
@@ -147,7 +242,7 @@ const ConditionOnePage = () => {
           failedTestIds.includes(testCase.testId)
         )
         
-        console.log(`🔄 Rerunning ${testCases.length} failed tests out of ${lastTestRun.allTestCases.length} total`)
+        console.log(`Rerunning ${testCases.length} failed tests out of ${lastTestRun.allTestCases.length} total`)
         
         // Skip decomposition and unit test generation steps
         setCurrentStep(2)
@@ -156,7 +251,7 @@ const ConditionOnePage = () => {
         
         // Step 1: Decomposing Prompt
         setCurrentStep(0)
-        console.log("🔍 Starting pedagogical decomposition...")
+        console.log("Starting pedagogical decomposition...")
         
         if (agentInfo?.prompt) {
           const decompositionResponse = await fetch('/api/claude/pedagogical-decomposition', {
@@ -175,12 +270,12 @@ const ConditionOnePage = () => {
 
           decompositionData = await decompositionResponse.json()
           setPedagogicalComponents(decompositionData.pedagogicalComponents)
-          console.log("📋 Pedagogical components identified:", decompositionData.pedagogicalComponents)
+          console.log("Pedagogical components identified:", decompositionData.pedagogicalComponents)
         }
 
         // Step 2: Generating Unit Tests
         setCurrentStep(1)
-        console.log("🧪 Generating unit tests...")
+        console.log("Generating unit tests...")
         
         if (decompositionData?.pedagogicalComponents) {
           const unitTestResponse = await fetch('/api/claude/unit-test-generation', {
@@ -201,8 +296,8 @@ const ConditionOnePage = () => {
 
           const unitTestData = await unitTestResponse.json()
           testCases = unitTestData.testCases
-          console.log("🎯 Unit tests generated:", unitTestData.summary)
-          console.log("📝 Test cases:", testCases)
+          console.log("Unit tests generated:", unitTestData.summary)
+          console.log("Test cases:", testCases)
           
           // Cache the full test run data
           setLastTestRun({
@@ -214,7 +309,7 @@ const ConditionOnePage = () => {
       }
 
       // Step 2.5: Prepare test data for ElevenLabs execution
-      console.log("🔧 Preparing test execution data...")
+      console.log("Preparing test execution data...")
       
       const preparedTestData = testCases?.map((testCase: any) => {
         // Find the matching student profile
@@ -266,17 +361,17 @@ const ConditionOnePage = () => {
       }).filter(Boolean) // Remove any null entries
       
       setPreparedTests(preparedTestData)
-      console.log("✅ Prepared", preparedTestData?.length, "tests for execution")
+      console.log(`Prepared ${preparedTestData?.length} tests for execution`)
 
       // Log all prepared tests as one object
-      console.log("📋 ALL PREPARED TESTS:", {
+      console.log("ALL PREPARED TESTS:", {
         totalTests: preparedTestData?.length,
         tests: preparedTestData
       })
       
       // Step 3: Running test cases with ElevenLabs
       setCurrentStep(2)
-      console.log("🚀 Executing test cases with ElevenLabs...")
+      console.log("Executing test cases with ElevenLabs...")
 
       const simulationResponse = await fetch('/api/elevenlabs/simulate-conversations', {
         method: 'POST',
@@ -294,8 +389,8 @@ const ConditionOnePage = () => {
       }
 
       const simulationData = await simulationResponse.json()
-      console.log("🎯 Simulation results:", simulationData.summary)
-      console.log("📊 Detailed results:", simulationData.results)
+      console.log("Simulation results:", simulationData.summary)
+      console.log("Detailed results:", simulationData.results)
 
       // Step 4: Create enhanced test results
       const enhancedResults: TestState[] = simulationData.results.map((result: any) => {
@@ -326,6 +421,9 @@ const ConditionOnePage = () => {
         }
       })
 
+      // Handle merging results for reruns or replacing for full runs
+      let finalResults: TestState[]
+
       if (rerunFailedOnly) {
         // Merge rerun results with existing results
         const updatedResults = [...enhancedTestResults]
@@ -335,23 +433,28 @@ const ConditionOnePage = () => {
             updatedResults[existingIndex] = newResult
           }
         })
-        setEnhancedTestResults(updatedResults)
+        finalResults = updatedResults
       } else {
         // Replace all results for full run
-        setEnhancedTestResults(enhancedResults)
+        finalResults = enhancedResults
       }
 
-      console.log("🎯 ENHANCED TEST RESULTS:", rerunFailedOnly ? 'Updated with rerun results' : enhancedResults)
+      console.log("ENHANCED TEST RESULTS:", rerunFailedOnly ? 'Updated with rerun results' : finalResults)
 
       setTestResults(simulationData.results) // Keep original for backward compatibility
       
       // Step 4: Remediating failures
       setCurrentStep(3)
-      console.log("🔧 Analyzing results and generating remediation...")
-      // TODO: Process test results and generate remediation suggestions
+      console.log("Analyzing results and generating remediation...")
+      
+      // Generate remediation and get the updated results
+      const resultsWithRemediation = await generateRemediationForResults(finalResults)
+      
+      // Set the final enhanced results with remediation
+      setEnhancedTestResults(resultsWithRemediation)
 
     } catch (error) {
-      console.error("❌ Error during test execution:", error)
+      console.error("Error during test execution:", error)
     } finally {
       setIsRunningTests(false)
       setIsRerunning(false)
@@ -493,7 +596,7 @@ const ConditionOnePage = () => {
                     isSaving={isSaving}
                     onUpdateConfig={handleUpdateConfig}
                     testResults={testResults} 
-                    enhancedTestResults={enhancedTestResults} 
+                    enhancedTestResults={enhancedTestResults}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
