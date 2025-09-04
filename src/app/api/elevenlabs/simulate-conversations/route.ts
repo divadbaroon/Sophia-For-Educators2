@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
           simulationSpecification: {
             simulatedUserConfig: {
               prompt: {
-                prompt: test.simulatedUserConfig.prompt.prompt,
+                prompt: "Maintain the persona of a college student, keep your responses realisitc and not overly long and unrealisitc for a real college student to give" + test.simulatedUserConfig.prompt.prompt,
                 llm: test.simulatedUserConfig.prompt.llm,
                 temperature: test.simulatedUserConfig.prompt.temperature,
               },
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
               task_description: test.agentContext.task_description,
               student_code: test.agentContext.student_code,
               execution_output: test.agentContext.execution_output,
-            }
+            },
           },
           extraEvaluationCriteria: test.evaluationCriteria.map((criteria: any) => ({
             id: criteria.id,
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
             conversationGoalPrompt: criteria.conversationGoalPrompt,
             useKnowledgeBase: criteria.useKnowledgeBase || false,
           })),
+          newTurnsLimit: 8
         });
 
         console.log(`✅ Simulation completed for test: ${test.testId}`);
