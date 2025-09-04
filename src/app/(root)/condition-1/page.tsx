@@ -67,6 +67,7 @@ const ConditionOnePage = () => {
   // Tracks whether tests have been completed
   const [testsRun, setTestsRun] = useState(false)
   const [isRunningTests, setIsRunningTests] = useState(false)
+  const [isRerunning, setIsRerunning] = useState(false)
 
   const [preparedTests, setPreparedTests] = useState(null)
 
@@ -74,6 +75,11 @@ const ConditionOnePage = () => {
   const [enhancedTestResults, setEnhancedTestResults] = useState<TestState[]>([])
 
   const [pedagogicalComponents, setPedagogicalComponents] = useState<PedagogicalComponent[] | null>(null)
+  const [lastTestRun, setLastTestRun] = useState<{
+    decompositionData: any;
+    allTestCases: any[];
+    timestamp: number;
+  } | null>(null)
 
   // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
@@ -118,65 +124,93 @@ const ConditionOnePage = () => {
     return updatedAgentData
   }
 
-  const handleRunTests = async () => {
+  const handleRunTests = async (rerunFailedOnly: boolean = false) => {
     setActiveTab("validation")
     setIsRunningTests(true)
+    setIsRerunning(rerunFailedOnly)
     setCurrentStep(0)
 
     try {
-      // Step 1: Decomposing Prompt
-      setCurrentStep(0)
-      console.log("🔍 Starting pedagogical decomposition...")
-      
       let decompositionData = null
-      
-      if (agentInfo?.prompt) {
-        const decompositionResponse = await fetch('/api/claude/pedagogical-decomposition', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            instructorPrompt: agentInfo.prompt
-          })
-        })
-
-        if (!decompositionResponse.ok) {
-          throw new Error(`Decomposition failed: ${decompositionResponse.statusText}`)
-        }
-
-        decompositionData = await decompositionResponse.json()
-        setPedagogicalComponents(decompositionData.pedagogicalComponents)
-        console.log("📋 Pedagogical components identified:", decompositionData.pedagogicalComponents)
-      }
-
-      // Step 2: Generating Unit Tests
-      setCurrentStep(1)
-      console.log("🧪 Generating unit tests...")
-      
       let testCases = null
-      
-      if (decompositionData?.pedagogicalComponents) {
-        const unitTestResponse = await fetch('/api/claude/unit-test-generation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pedagogicalComponents: decompositionData.pedagogicalComponents,
-            studentProfiles: simulatedStudentProfiles, 
-            scenarioTemplates: scenarioTemplates
-          })
-        })
 
-        if (!unitTestResponse.ok) {
-          throw new Error(`Unit test generation failed: ${unitTestResponse.statusText}`)
+      if (rerunFailedOnly && lastTestRun && enhancedTestResults.length > 0) {
+        // Use cached data for rerun
+        decompositionData = lastTestRun.decompositionData
+        
+        // Filter only failed test cases
+        const failedTestIds = enhancedTestResults
+          .filter(result => result.finalResult === 'failed')
+          .map(result => result.testId)
+        
+        testCases = lastTestRun.allTestCases.filter(testCase => 
+          failedTestIds.includes(testCase.testId)
+        )
+        
+        console.log(`🔄 Rerunning ${testCases.length} failed tests out of ${lastTestRun.allTestCases.length} total`)
+        
+        // Skip decomposition and unit test generation steps
+        setCurrentStep(2)
+      } else {
+        // Full test run - do decomposition and unit test generation
+        
+        // Step 1: Decomposing Prompt
+        setCurrentStep(0)
+        console.log("🔍 Starting pedagogical decomposition...")
+        
+        if (agentInfo?.prompt) {
+          const decompositionResponse = await fetch('/api/claude/pedagogical-decomposition', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              instructorPrompt: agentInfo.prompt
+            })
+          })
+
+          if (!decompositionResponse.ok) {
+            throw new Error(`Decomposition failed: ${decompositionResponse.statusText}`)
+          }
+
+          decompositionData = await decompositionResponse.json()
+          setPedagogicalComponents(decompositionData.pedagogicalComponents)
+          console.log("📋 Pedagogical components identified:", decompositionData.pedagogicalComponents)
         }
 
-        const unitTestData = await unitTestResponse.json()
-        testCases = unitTestData.testCases
-        console.log("🎯 Unit tests generated:", unitTestData.summary)
-        console.log("📝 Test cases:", testCases)
+        // Step 2: Generating Unit Tests
+        setCurrentStep(1)
+        console.log("🧪 Generating unit tests...")
+        
+        if (decompositionData?.pedagogicalComponents) {
+          const unitTestResponse = await fetch('/api/claude/unit-test-generation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              pedagogicalComponents: decompositionData.pedagogicalComponents,
+              studentProfiles: simulatedStudentProfiles, 
+              scenarioTemplates: scenarioTemplates
+            })
+          })
+
+          if (!unitTestResponse.ok) {
+            throw new Error(`Unit test generation failed: ${unitTestResponse.statusText}`)
+          }
+
+          const unitTestData = await unitTestResponse.json()
+          testCases = unitTestData.testCases
+          console.log("🎯 Unit tests generated:", unitTestData.summary)
+          console.log("📝 Test cases:", testCases)
+          
+          // Cache the full test run data
+          setLastTestRun({
+            decompositionData,
+            allTestCases: testCases,
+            timestamp: Date.now()
+          })
+        }
       }
 
       // Step 2.5: Prepare test data for ElevenLabs execution
@@ -264,37 +298,50 @@ const ConditionOnePage = () => {
       console.log("📊 Detailed results:", simulationData.results)
 
       // Step 4: Create enhanced test results
-        const enhancedResults: TestState[] = simulationData.results.map((result: any) => {
-          const evaluationResults = result.evaluationResults || result.analysis?.evaluationCriteriaResults || {}
-          const finalResult = Object.values(evaluationResults).every((res: any) => res.result === 'success') ? 'passed' : 'failed'
-          
-          // Use decompositionData directly instead of state
-          const getSourceLinesForComponent = (componentName: string): number[] => {
-            if (!decompositionData?.pedagogicalComponents) return []
-            const component = decompositionData.pedagogicalComponents.find((comp: any) => comp.name === componentName)
-            return component?.sourceLines || []
-          }
-          
-          return {
-            testId: result.testId,
-            testName: result.componentName,
-            componentName: result.componentName,
-            evaluationResults,
-            sourceLines: getSourceLinesForComponent(result.componentName), // Use fresh data here
-            selectedProfileId: result.selectedProfileId || '',
-            selectedScenarioId: result.selectedScenarioId || '',
-            scenarioOverview: getScenarioOverview(result.selectedScenarioId || ''),
-            studentProfilePrompt: getStudentProfilePrompt(result.selectedProfileId || ''),
-            conversation: result.conversation || [],
-            finalResult,
-            transcriptSummary: result.analysis?.transcriptSummary,
-            callSuccessful: result.analysis?.callSuccessful
+      const enhancedResults: TestState[] = simulationData.results.map((result: any) => {
+        const evaluationResults = result.evaluationResults || result.analysis?.evaluationCriteriaResults || {}
+        const finalResult = Object.values(evaluationResults).every((res: any) => res.result === 'success') ? 'passed' : 'failed'
+        
+        // Use decompositionData directly instead of state
+        const getSourceLinesForComponent = (componentName: string): number[] => {
+          if (!decompositionData?.pedagogicalComponents) return []
+          const component = decompositionData.pedagogicalComponents.find((comp: any) => comp.name === componentName)
+          return component?.sourceLines || []
+        }
+        
+        return {
+          testId: result.testId,
+          testName: result.componentName,
+          componentName: result.componentName,
+          evaluationResults,
+          sourceLines: getSourceLinesForComponent(result.componentName),
+          selectedProfileId: result.selectedProfileId || '',
+          selectedScenarioId: result.selectedScenarioId || '',
+          scenarioOverview: getScenarioOverview(result.selectedScenarioId || ''),
+          studentProfilePrompt: getStudentProfilePrompt(result.selectedProfileId || ''),
+          conversation: result.conversation || [],
+          finalResult,
+          transcriptSummary: result.analysis?.transcriptSummary,
+          callSuccessful: result.analysis?.callSuccessful
+        }
+      })
+
+      if (rerunFailedOnly) {
+        // Merge rerun results with existing results
+        const updatedResults = [...enhancedTestResults]
+        enhancedResults.forEach(newResult => {
+          const existingIndex = updatedResults.findIndex(existing => existing.testId === newResult.testId)
+          if (existingIndex >= 0) {
+            updatedResults[existingIndex] = newResult
           }
         })
+        setEnhancedTestResults(updatedResults)
+      } else {
+        // Replace all results for full run
+        setEnhancedTestResults(enhancedResults)
+      }
 
-      setEnhancedTestResults(enhancedResults)
-
-      console.log("🎯 ENHANCED TEST RESULTS:", enhancedResults)
+      console.log("🎯 ENHANCED TEST RESULTS:", rerunFailedOnly ? 'Updated with rerun results' : enhancedResults)
 
       setTestResults(simulationData.results) // Keep original for backward compatibility
       
@@ -305,9 +352,9 @@ const ConditionOnePage = () => {
 
     } catch (error) {
       console.error("❌ Error during test execution:", error)
-      // Handle error - maybe show error state to user
     } finally {
       setIsRunningTests(false)
+      setIsRerunning(false)
       setTestsRun(true)
     }
   }
@@ -336,30 +383,57 @@ const ConditionOnePage = () => {
               <h1 className="text-2xl font-bold text-gray-900 mb-1">Prompt Validation Testing</h1>
               <p className="text-sm text-gray-500">AI-powered validation and testing for educational prompts</p>
             </div>
-            <Button
-              onClick={handleRunTests}
-              disabled={isRunningTests || isLoading || !agentInfo?.agent_id}
-              className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2"
-            >
-              {isRunningTests ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Running Tests...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                  Run Tests
-                </>
+            <div className="flex items-center gap-2">
+              {/* Rerun Failed Tests Button */}
+              {enhancedTestResults.length > 0 && enhancedTestResults.some(r => r.finalResult === 'failed') && (
+                <Button
+                  onClick={() => handleRunTests(true)}
+                  disabled={isRunningTests || isLoading || !agentInfo?.agent_id}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  {isRerunning ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                      Rerunning Failed...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Rerun Failed ({enhancedTestResults.filter(r => r.finalResult === 'failed').length})
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+              
+              {/* Run All Tests Button */}
+              <Button
+                onClick={() => handleRunTests(false)}
+                disabled={isRunningTests || isLoading || !agentInfo?.agent_id}
+                className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2"
+              >
+                {isRunningTests && !isRerunning ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Running Tests...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    Run All Tests
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
