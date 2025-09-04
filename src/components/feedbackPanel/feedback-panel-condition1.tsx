@@ -24,6 +24,19 @@ import { FeedbackItem, FeedbackPanelPropsCondition1 } from "@/types"
 
 import { severityConfig } from "@/constants"
 
+const truncateToSentences = (text: string, sentenceCount: number = 3): string => {
+  if (!text) return ""
+  
+  // Split by sentence endings (., !, ?)
+  const sentences = text.match(/[^\.!?]*[\.!?]/g) || []
+  
+  if (sentences.length <= sentenceCount) {
+    return text
+  }
+  
+  return sentences.slice(0, sentenceCount).join('').trim() + '...'
+}
+
 export function FeedbackPanelCondition1({
   feedbackData,
   selectedLine,
@@ -108,19 +121,6 @@ export function FeedbackPanelCondition1({
     }
     
     setIsEditingChange(false)
-  }
-
-  const truncateToSentences = (text: string, sentenceCount: number = 3): string => {
-    if (!text) return ""
-    
-    // Split by sentence endings (., !, ?)
-    const sentences = text.match(/[^\.!?]*[\.!?]/g) || []
-    
-    if (sentences.length <= sentenceCount) {
-      return text
-    }
-    
-    return sentences.slice(0, sentenceCount).join('').trim() + '...'
   }
 
   const handleRejectChange = () => {
@@ -248,20 +248,48 @@ export function FeedbackPanelCondition1({
         </div>
 
         <div className="flex-1 overflow-auto p-4 space-y-4">
-          {selectedProblem.problemOverview && (
-            <Collapsible open={expandedSections.has("overview")} onOpenChange={() => toggleSection("overview")}>
+          {/* Problem Overview - Shows full description */}
+          <Collapsible open={expandedSections.has("overview")} onOpenChange={() => toggleSection("overview")}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
+                  expandedSections.has("overview")
+                    ? "bg-muted/30 hover:bg-muted/30 border-border/30"
+                    : "hover:bg-muted/50 hover:border-border",
+                )}
+              >
+                Problem Overview
+                {expandedSections.has("overview") ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
+                <p className="text-muted-foreground text-pretty">{selectedProblem.description}</p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* Conversation Section */}
+          {selectedProblem.conversation && (
+            <Collapsible open={expandedSections.has("conversation")} onOpenChange={() => toggleSection("conversation")}>
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   className={cn(
                     "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
-                    expandedSections.has("overview")
+                    expandedSections.has("conversation")
                       ? "bg-muted/30 hover:bg-muted/30 border-border/30"
                       : "hover:bg-muted/50 hover:border-border",
                   )}
                 >
-                  Problem Overview
-                  {expandedSections.has("overview") ? (
+                  Conversation Transcript
+                  {expandedSections.has("conversation") ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
                     <ChevronRight className="w-4 h-4" />
@@ -269,8 +297,29 @@ export function FeedbackPanelCondition1({
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-3">
-                <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
-                  <p className="text-muted-foreground text-pretty">{selectedProblem.problemOverview}</p>
+                <div className="p-4 bg-muted/20 rounded-lg border border-border/30 max-h-96 overflow-y-auto">
+                  <div className="space-y-3">
+                    {selectedProblem.conversation.map((turn: any, index: number) => (
+                      <div key={index} className={cn(
+                        "p-3 rounded-lg",
+                        turn.role === 'agent' 
+                          ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800" 
+                          : "bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+                      )}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-xs">
+                            {turn.role === 'agent' ? 'Agent' : 'Student'}
+                          </Badge>
+                          {turn.timeInCallSecs && (
+                            <span className="text-xs text-muted-foreground">
+                              {Math.floor(turn.timeInCallSecs / 60)}:{(turn.timeInCallSecs % 60).toString().padStart(2, '0')}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap">{turn.message}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -312,51 +361,6 @@ export function FeedbackPanelCondition1({
                       <p className="text-xs text-muted-foreground">{result.rationale}</p>
                     </div>
                   ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-
-          {/* Conversation Section */}
-          {selectedProblem.conversation && (
-            <Collapsible open={expandedSections.has("conversation")} onOpenChange={() => toggleSection("conversation")}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
-                    expandedSections.has("conversation")
-                      ? "bg-muted/30 hover:bg-muted/30 border-border/30"
-                      : "hover:bg-muted/50 hover:border-border",
-                  )}
-                >
-                  Conversation Transcript
-                  {expandedSections.has("conversation") ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-3">
-                <div className="p-4 bg-muted/20 rounded-lg border border-border/30 max-h-96 overflow-y-auto">
-                  <div className="space-y-3">
-                    {selectedProblem.conversation.map((turn: any, index: number) => (
-                      <div key={index} className={cn(
-                        "p-3 rounded-lg",
-                        turn.role === 'agent' 
-                          ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800" 
-                          : "bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
-                      )}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className="text-xs">
-                            {turn.role === 'agent' ? 'Agent' : 'Student'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap">{turn.message}</p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -699,10 +703,8 @@ export function FeedbackPanelCondition1({
                           ))}
                         </div>
                       )}
-                      <p className="text-sm text-muted-foreground mt-1 text-pretty">
-                        {truncateToSentences(item.description, 2)}
-                      </p>
-                        {(item.problemOverview || item.exampleVideos || item.suggestedChange) && (
+                      <p className="text-sm text-muted-foreground mt-1 text-pretty">{truncateToSentences(item.description, 2)}</p>
+                      {(item.problemOverview || item.exampleVideos || item.suggestedChange) && (
                         <div className="flex gap-2 mt-2">
                           <Button
                             variant="outline"
