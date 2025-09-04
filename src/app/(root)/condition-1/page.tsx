@@ -5,72 +5,77 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
+import { ValidationInterface } from "@/components/testResults/validation-interface-condition1"
 import { AgentConfiguration } from "@/components/configuration/AgentConfiguration"
-import { ValidationInterface } from "@/components/testResults/validation-interface"
 
 import { useFetchAgentConfig, useUpdateAgentConfig } from "@/lib/hooks/configuration/useAgentConfiguration"
 
 import { AgentInfo } from "@/components/configuration/types"
 
 const ConditionOnePage = () => {
+  // Stores the agent configuration data
+  const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null)
+
   const [activeTab, setActiveTab] = useState<"configuration" | "validation">("configuration")
+
   const [testsRun, setTestsRun] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [isRunningTests, setIsRunningTests] = useState(false)
 
-  const [agentInfo, setAgentInfo] = useState<AgentInfo | null>(null)
-
+  // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
+  // Update agent configuration
   const { updateAgentConfig, isSaving, error: updateError } = useUpdateAgentConfig()
 
-  const error = fetchError || updateError
-    const steps = ["Setting up test cases", "Running test cases"]
-  
-    // Load agent config on component mount
-    const handleFetchConfig = async () => {
-      const agentData = await fetchAgentConfig()
-      if (agentData) {
-        setAgentInfo(agentData)
-      }
+  const error = fetchError || updateError 
+
+  // Load agent config on component mount
+  const handleFetchConfig = async () => {
+    const agentData = await fetchAgentConfig()
+    if (agentData) {
+      setAgentInfo(agentData)
     }
-  
-    // Update agent config
-    const handleUpdateConfig = async (prompt: string, firstMessage: string) => {
-      const updatedAgentData = await updateAgentConfig(prompt, firstMessage)
-      if (updatedAgentData) {
-        setAgentInfo(updatedAgentData)
-      }
-      return updatedAgentData
+  }
+
+  // Updates agent configuration and refreshes local state
+  const handleUpdateConfig = async (prompt: string, firstMessage: string) => {
+    const updatedAgentData = await updateAgentConfig(prompt, firstMessage)
+    if (updatedAgentData) {
+      setAgentInfo(updatedAgentData)
     }
-  
-    const handleRunTests = async () => {
-      setActiveTab("validation")
-      setIsRunningTests(true)
-      setCurrentStep(0)
-  
-      // Simulate progress through steps
-      for (let i = 0; i < steps.length; i++) {
-        setCurrentStep(i)
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-      }
-  
-      setIsRunningTests(false)
-      setTestsRun(true)
+    return updatedAgentData
+  }
+
+  const steps = ["Decomposing Prompt", "Setting up test cases", "Running test cases", "Remediating failures"]
+
+  const handleRunTests = async () => {
+    setActiveTab("validation")
+    setIsRunningTests(true)
+    setCurrentStep(0)
+
+    // Simulate progress through steps
+    for (let i = 0; i < steps.length; i++) {
+      setCurrentStep(i)
+      await new Promise((resolve) => setTimeout(resolve, 1500))
     }
-  
-    useEffect(() => {
-      handleFetchConfig()
-    }, [])
+
+    setIsRunningTests(false)
+    setTestsRun(true)
+  }
+
+  useEffect(() => {
+    handleFetchConfig()
+  }, [])
 
   return (
-    <main className="wrapper-full min-h-screen bg-gray-50">
+    <main className="wrapper page min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Header */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm mt-5">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm mt-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Agent Configuration</h1>
-              <p className="text-sm text-gray-500 mt-1">Configure your tutor agent to match your pedagogical teaching style</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Prompt Validation Testing</h1>
+              <p className="text-sm text-gray-500">AI-powered validation and testing for educational prompts</p>
             </div>
             <Button
               onClick={handleRunTests}
@@ -134,8 +139,8 @@ const ConditionOnePage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {activeTab === "configuration" && (
-                <AgentConfiguration 
+              {activeTab === "configuration" && 
+               <AgentConfiguration 
                   agentInfo={agentInfo}
                   isLoading={isLoading}
                   isSaving={isSaving}
@@ -143,7 +148,7 @@ const ConditionOnePage = () => {
                   onUpdateConfig={handleUpdateConfig}
                   onRefresh={handleFetchConfig}
                 />
-              )}
+              }
               {activeTab === "validation" && (
                 <div className="h-[600px]">
                   {testsRun || isRunningTests ? (
