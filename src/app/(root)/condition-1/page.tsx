@@ -15,6 +15,43 @@ import { AgentInfo } from "@/components/configuration/types"
 import { scenarioTemplates } from "@/lib/testCaseData/scenarioData"
 import { simulatedStudentProfiles } from "@/lib/testCaseData/studentProfiles"
 
+interface PedagogicalComponent {
+  name: string
+  description: string
+  sourceLines: number[]
+  testableBehaviors: string[]
+  failureIndicators: string[]
+}
+
+// Enhanced test state interface that includes all necessary information
+export interface TestState {
+  testId: string
+  testName: string
+  componentName: string
+  evaluationResults: Record<string, {
+    criteriaId: string
+    result: 'success' | 'failure' // Remove 'unknown' from here
+    rationale: string
+  }>
+  sourceLines: number[]
+  selectedProfileId: string
+  selectedScenarioId: string
+  scenarioOverview: string
+  studentProfilePrompt: string
+  conversation: Array<{
+    role: 'agent' | 'user'
+    message: string
+    timeInCallSecs?: number
+    multivoice_message?: any
+    toolCalls?: any[]
+    toolResults?: any[]
+    interrupted?: boolean
+  }>
+  finalResult: 'passed' | 'failed'
+  transcriptSummary?: string
+  callSuccessful?: string
+}
+
 const ConditionOnePage = () => {
 
   // Stores the agent configuration data
@@ -34,6 +71,9 @@ const ConditionOnePage = () => {
   const [preparedTests, setPreparedTests] = useState(null)
 
   const [testResults, setTestResults] = useState([])
+  const [enhancedTestResults, setEnhancedTestResults] = useState<TestState[]>([])
+
+  const [pedagogicalComponents, setPedagogicalComponents] = useState<PedagogicalComponent[] | null>(null)
 
   // Get agent configuration
   const { fetchAgentConfig, isLoading, error: fetchError } = useFetchAgentConfig()
@@ -41,6 +81,25 @@ const ConditionOnePage = () => {
   const { updateAgentConfig, isSaving, error: updateError } = useUpdateAgentConfig()
 
   const error = fetchError || updateError 
+
+  // Helper function to find scenario overview
+  const getScenarioOverview = (scenarioId: string): string => {
+    const scenario = scenarioTemplates.find(template => template.scenarioId === scenarioId)
+    return scenario?.overview || 'No overview available'
+  }
+
+  // Helper function to find student profile prompt
+  const getStudentProfilePrompt = (profileId: string): string => {
+    const profile = simulatedStudentProfiles.find(profile => profile.id === profileId)
+    return profile?.prompt || 'No profile prompt available'
+  }
+
+  // Helper function to get source lines for a component
+  const getComponentSourceLines = (componentName: string): number[] => {
+    if (!pedagogicalComponents) return []
+    const component = pedagogicalComponents.find(comp => comp.name === componentName)
+    return component?.sourceLines || []
+  }
 
   // Load agent config on component mount
   const handleFetchConfig = async () => {
@@ -60,165 +119,198 @@ const ConditionOnePage = () => {
   }
 
   const handleRunTests = async () => {
-  setActiveTab("validation")
-  setIsRunningTests(true)
-  setCurrentStep(0)
-
-  try {
-    // Step 1: Decomposing Prompt
+    setActiveTab("validation")
+    setIsRunningTests(true)
     setCurrentStep(0)
-    console.log("🔍 Starting pedagogical decomposition...")
-    
-    let pedagogicalComponents = null
-    
-    if (agentInfo?.prompt) {
-      const decompositionResponse = await fetch('/api/claude/pedagogical-decomposition', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          instructorPrompt: agentInfo.prompt
-        })
-      })
 
-      if (!decompositionResponse.ok) {
-        throw new Error(`Decomposition failed: ${decompositionResponse.statusText}`)
-      }
-
-      const decompositionData = await decompositionResponse.json()
-      pedagogicalComponents = decompositionData.pedagogicalComponents
-      console.log("📋 Pedagogical components identified:", pedagogicalComponents)
-    }
-
-    // Step 2: Generating Unit Tests
-    setCurrentStep(1)
-    console.log("🧪 Generating unit tests...")
-    
-    let testCases = null
-    
-    if (pedagogicalComponents) {
-      const unitTestResponse = await fetch('/api/claude/unit-test-generation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          pedagogicalComponents: pedagogicalComponents,
-          studentProfiles: simulatedStudentProfiles,
-          scenarioTemplates: scenarioTemplates
-        })
-      })
-
-      if (!unitTestResponse.ok) {
-        throw new Error(`Unit test generation failed: ${unitTestResponse.statusText}`)
-      }
-
-      const unitTestData = await unitTestResponse.json()
-      testCases = unitTestData.testCases
-      console.log("🎯 Unit tests generated:", unitTestData.summary)
-      console.log("📝 Test cases:", testCases)
-    }
-
-    // NEW: Step 2.5: Prepare test data for ElevenLabs execution
-    console.log("🔧 Preparing test execution data...")
-    
-    const preparedTestData = testCases?.map((testCase: any) => {
-      // Find the matching student profile
-      const studentProfile = simulatedStudentProfiles.find(
-        profile => profile.id === testCase.selectedProfileId
-      )
+    try {
+      // Step 1: Decomposing Prompt
+      setCurrentStep(0)
+      console.log("🔍 Starting pedagogical decomposition...")
       
-      // Find the matching scenario
-      const scenario = scenarioTemplates.find(
-        template => template.scenarioId === testCase.selectedScenarioId
-      )
+      let decompositionData = null
       
-      if (!studentProfile || !scenario) {
-        console.warn(`Missing data for test ${testCase.testId}:`, {
-          profileFound: !!studentProfile,
-          scenarioFound: !!scenario
-        })
-        return null
-      }
-
-      return {
-        testId: testCase.testId,
-        componentName: testCase.componentName,
-        
-        // ElevenLabs simulation configuration
-        simulatedUserConfig: {
-          prompt: {
-            prompt: studentProfile.prompt,
-            llm: 'claude-3-5-sonnet',
-            temperature: 0.7,
+      if (agentInfo?.prompt) {
+        const decompositionResponse = await fetch('/api/claude/pedagogical-decomposition', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-        },
-        
-        // Agent context (the dynamic variables)
-        agentContext: {
-          task_description: scenario.taskDescription,
-          student_code: scenario.studentCode,
-          execution_output: scenario.executionOutput
-        },
-        
-        // Test execution details
-        conversationStarter: testCase.conversationStarter,
-        evaluationCriteria: testCase.evaluationCriteria,
-        
-        // Metadata for tracking
-        selectedProfileId: testCase.selectedProfileId,
-        selectedScenarioId: testCase.selectedScenarioId
+          body: JSON.stringify({
+            instructorPrompt: agentInfo.prompt
+          })
+        })
+
+        if (!decompositionResponse.ok) {
+          throw new Error(`Decomposition failed: ${decompositionResponse.statusText}`)
+        }
+
+        decompositionData = await decompositionResponse.json()
+        setPedagogicalComponents(decompositionData.pedagogicalComponents)
+        console.log("📋 Pedagogical components identified:", decompositionData.pedagogicalComponents)
       }
-    }).filter(Boolean) // Remove any null entries
-    
-    setPreparedTests(preparedTestData)
-    console.log("✅ Prepared", preparedTestData?.length, "tests for execution")
 
-    // Log all prepared tests as one object
-    console.log("📋 ALL PREPARED TESTS:", {
-      totalTests: preparedTestData?.length,
-      tests: preparedTestData
-    })
-    
-    // Step 3: Running test cases with ElevenLabs
-    setCurrentStep(2)
-    console.log("🚀 Executing test cases with ElevenLabs...")
+      // Step 2: Generating Unit Tests
+      setCurrentStep(1)
+      console.log("🧪 Generating unit tests...")
+      
+      let testCases = null
+      
+      if (decompositionData?.pedagogicalComponents) {
+        const unitTestResponse = await fetch('/api/claude/unit-test-generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pedagogicalComponents: decompositionData.pedagogicalComponents,
+            studentProfiles: simulatedStudentProfiles,
+            scenarioTemplates: scenarioTemplates
+          })
+        })
 
-    const simulationResponse = await fetch('/api/elevenlabs/simulate-conversations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        agentId: agentInfo?.agent_id,
-        preparedTests: preparedTestData
+        if (!unitTestResponse.ok) {
+          throw new Error(`Unit test generation failed: ${unitTestResponse.statusText}`)
+        }
+
+        const unitTestData = await unitTestResponse.json()
+        testCases = unitTestData.testCases
+        console.log("🎯 Unit tests generated:", unitTestData.summary)
+        console.log("📝 Test cases:", testCases)
+      }
+
+      // Step 2.5: Prepare test data for ElevenLabs execution
+      console.log("🔧 Preparing test execution data...")
+      
+      const preparedTestData = testCases?.map((testCase: any) => {
+        // Find the matching student profile
+        const studentProfile = simulatedStudentProfiles.find(
+          profile => profile.id === testCase.selectedProfileId
+        )
+        
+        // Find the matching scenario
+        const scenario = scenarioTemplates.find(
+          template => template.scenarioId === testCase.selectedScenarioId
+        )
+        
+        if (!studentProfile || !scenario) {
+          console.warn(`Missing data for test ${testCase.testId}:`, {
+            profileFound: !!studentProfile,
+            scenarioFound: !!scenario
+          })
+          return null
+        }
+
+        return {
+          testId: testCase.testId,
+          componentName: testCase.componentName,
+          
+          // ElevenLabs simulation configuration
+          simulatedUserConfig: {
+            prompt: {
+              prompt: studentProfile.prompt,
+              llm: 'claude-3-5-sonnet',
+              temperature: 0.7,
+            },
+          },
+          
+          // Agent context (the dynamic variables)
+          agentContext: {
+            task_description: scenario.taskDescription,
+            student_code: scenario.studentCode,
+            execution_output: scenario.executionOutput
+          },
+          
+          // Test execution details
+          conversationStarter: testCase.conversationStarter,
+          evaluationCriteria: testCase.evaluationCriteria,
+          
+          // Metadata for tracking
+          selectedProfileId: testCase.selectedProfileId,
+          selectedScenarioId: testCase.selectedScenarioId
+        }
+      }).filter(Boolean) // Remove any null entries
+      
+      setPreparedTests(preparedTestData)
+      console.log("✅ Prepared", preparedTestData?.length, "tests for execution")
+
+      // Log all prepared tests as one object
+      console.log("📋 ALL PREPARED TESTS:", {
+        totalTests: preparedTestData?.length,
+        tests: preparedTestData
       })
-    })
+      
+      // Step 3: Running test cases with ElevenLabs
+      setCurrentStep(2)
+      console.log("🚀 Executing test cases with ElevenLabs...")
 
-    if (!simulationResponse.ok) {
-      throw new Error(`Simulation failed: ${simulationResponse.statusText}`)
+      const simulationResponse = await fetch('/api/elevenlabs/simulate-conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: agentInfo?.agent_id,
+          preparedTests: preparedTestData
+        })
+      })
+
+      if (!simulationResponse.ok) {
+        throw new Error(`Simulation failed: ${simulationResponse.statusText}`)
+      }
+
+      const simulationData = await simulationResponse.json()
+      console.log("🎯 Simulation results:", simulationData.summary)
+      console.log("📊 Detailed results:", simulationData.results)
+
+      // Step 4: Create enhanced test results
+        const enhancedResults: TestState[] = simulationData.results.map((result: any) => {
+          const evaluationResults = result.evaluationResults || result.analysis?.evaluationCriteriaResults || {}
+          const finalResult = Object.values(evaluationResults).every((res: any) => res.result === 'success') ? 'passed' : 'failed'
+          
+          // Use decompositionData directly instead of state
+          const getSourceLinesForComponent = (componentName: string): number[] => {
+            if (!decompositionData?.pedagogicalComponents) return []
+            const component = decompositionData.pedagogicalComponents.find((comp: any) => comp.name === componentName)
+            return component?.sourceLines || []
+          }
+          
+          return {
+            testId: result.testId,
+            testName: result.componentName,
+            componentName: result.componentName,
+            evaluationResults,
+            sourceLines: getSourceLinesForComponent(result.componentName), // Use fresh data here
+            selectedProfileId: result.selectedProfileId || '',
+            selectedScenarioId: result.selectedScenarioId || '',
+            scenarioOverview: getScenarioOverview(result.selectedScenarioId || ''),
+            studentProfilePrompt: getStudentProfilePrompt(result.selectedProfileId || ''),
+            conversation: result.conversation || [],
+            finalResult,
+            transcriptSummary: result.analysis?.transcriptSummary,
+            callSuccessful: result.analysis?.callSuccessful
+          }
+        })
+
+      setEnhancedTestResults(enhancedResults)
+
+      console.log("🎯 ENHANCED TEST RESULTS:", enhancedResults)
+
+      setTestResults(simulationData.results) // Keep original for backward compatibility
+      
+      // Step 4: Remediating failures
+      setCurrentStep(3)
+      console.log("🔧 Analyzing results and generating remediation...")
+      // TODO: Process test results and generate remediation suggestions
+
+    } catch (error) {
+      console.error("❌ Error during test execution:", error)
+      // Handle error - maybe show error state to user
+    } finally {
+      setIsRunningTests(false)
+      setTestsRun(true)
     }
-
-    const simulationData = await simulationResponse.json()
-    console.log("🎯 Simulation results:", simulationData.summary)
-    console.log("📊 Detailed results:", simulationData.results)
-
-    setTestResults(simulationData.results)
-    
-    // Step 4: Remediating failures
-    setCurrentStep(3)
-    console.log("🔧 Analyzing results and generating remediation...")
-    // TODO: Process test results and generate remediation suggestions
-
-  } catch (error) {
-    console.error("❌ Error during test execution:", error)
-    // Handle error - maybe show error state to user
-  } finally {
-    setIsRunningTests(false)
-    setTestsRun(true)
   }
-}
 
   useEffect(() => {
     handleFetchConfig()
@@ -317,24 +409,25 @@ const ConditionOnePage = () => {
                 />
               }
               {activeTab === "validation" && (
-                <div className="h-[600px]">
-                  {testsRun || isRunningTests ? (
-                    <ValidationInterfaceCondition1
-                      isRunningTests={isRunningTests} 
-                      currentStep={currentStep}
-                      steps={steps}
-                      agentInfo={agentInfo}
-                      isSaving={isSaving}
-                      onUpdateConfig={handleUpdateConfig}
-                      testResults={testResults}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="text-gray-500">Click "Run Tests" to begin validation</p>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="h-[600px]">
+                {testsRun || isRunningTests ? (
+                  <ValidationInterfaceCondition1
+                    isRunningTests={isRunningTests} 
+                    currentStep={currentStep}
+                    steps={steps}
+                    agentInfo={agentInfo}
+                    isSaving={isSaving}
+                    onUpdateConfig={handleUpdateConfig}
+                    testResults={testResults} 
+                    enhancedTestResults={enhancedTestResults} 
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Click "Run Tests" to begin validation</p>
+                  </div>
+                )}
+              </div>
+            )}
             </CardContent>
           </Card>
         </div>
