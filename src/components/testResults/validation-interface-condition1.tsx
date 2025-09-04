@@ -21,7 +21,7 @@ export interface TestState {
   componentName: string
   evaluationResults: Record<string, {
     criteriaId: string
-    result: 'success' | 'failure' // Remove 'unknown' from here
+    result: 'success' | 'failure'
     rationale: string
   }>
   sourceLines: number[]
@@ -41,6 +41,21 @@ export interface TestState {
   finalResult: 'passed' | 'failed'
   transcriptSummary?: string
   callSuccessful?: string
+  remediationSuggestion?: {
+    analysis: {
+      pedagogicalGap: string
+      rootCause: string
+      targetedFix: string
+    }
+    suggestions: Array<{
+      changeType: 'replace' | 'add' | 'modify' | 'restructure'
+      affectedLines: number[]
+      originalContent: string
+      suggestedContent: string
+      rationale: string
+      pedagogicalPrinciple: string
+    }>
+  }
 }
 
 interface TestResult {
@@ -72,7 +87,7 @@ export function ValidationInterfaceCondition1({
   isSaving = false,
   onUpdateConfig,
   testResults = [],
-  enhancedTestResults = [] // Add this new prop
+  enhancedTestResults = [], 
 }: ValidationInterfaceCondition1Props & { 
   testResults?: TestResult[]
   enhancedTestResults?: TestState[] 
@@ -104,6 +119,7 @@ export function ValidationInterfaceCondition1({
         conversation: testState.conversation,
         scenarioOverview: testState.scenarioOverview,
         studentProfilePrompt: testState.studentProfilePrompt,
+        remediationSuggestion: testState.remediationSuggestion, 
         analysis: {
           transcriptSummary: testState.transcriptSummary,
           callSuccessful: testState.callSuccessful
