@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+
 import { AgentConfiguration } from "@/components/configuration/AgentConfiguration"
 import { ValidationInterface } from "@/components/testResults/validation-interface"
 
@@ -33,8 +35,8 @@ const ConditionOnePage = () => {
     }
   
     // Update agent config
-    const handleUpdateConfig = async (name: string, prompt: string, firstMessage: string) => {
-      const updatedAgentData = await updateAgentConfig(name, prompt, firstMessage)
+    const handleUpdateConfig = async (prompt: string, firstMessage: string) => {
+      const updatedAgentData = await updateAgentConfig(prompt, firstMessage)
       if (updatedAgentData) {
         setAgentInfo(updatedAgentData)
       }
