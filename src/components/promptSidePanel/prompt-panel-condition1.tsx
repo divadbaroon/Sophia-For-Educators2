@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { Edit3, Save, X } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface PromptData {
   title: string
@@ -15,8 +15,10 @@ interface PromptPanelProps {
   promptData: PromptData
   selectedLine: number | null
   onLineSelect: (line: number | null) => void
-  condition?: "1" | "2" | "test-creation" // Added test-creation condition
-  isRunningTests?: boolean // Added prop to track if tests are running
+  condition?: "1" | "2" | "test-creation"
+  isRunningTests?: boolean
+  onPromptSave?: (newPrompt: string) => Promise<void> 
+  isSaving?: boolean 
 }
 
 export function PromptPanel({
@@ -25,12 +27,19 @@ export function PromptPanel({
   onLineSelect,
   condition = "1",
   isRunningTests = false,
+  onPromptSave,
+  isSaving = false,
 }: PromptPanelProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(promptData.content.join("\n"))
   const [editedLines, setEditedLines] = useState<Set<number>>(new Set())
 
-  const handleSave = () => {
+  // Update editedContent when promptData changes
+  useEffect(() => {
+    setEditedContent(promptData.content.join("\n"))
+  }, [promptData.content])
+
+  const handleSave = async () => {
     const newLines = editedContent.split("\n")
     const changedLines = new Set<number>()
 
@@ -42,8 +51,13 @@ export function PromptPanel({
     })
 
     setEditedLines(changedLines)
+
+    // Call the save callback if provided
+    if (onPromptSave) {
+      await onPromptSave(editedContent)
+    }
+    
     setIsEditing(false)
-    // In a real app, you'd update the promptData here
   }
 
   const handleCancel = () => {
@@ -66,6 +80,7 @@ export function PromptPanel({
                 size="sm"
                 onClick={() => setIsEditing(true)}
                 className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
+                disabled={isSaving} // Disable during save operations
               >
                 <Edit3 className="h-4 w-4 mr-1" />
                 Edit
@@ -76,15 +91,17 @@ export function PromptPanel({
                   variant="outline"
                   size="sm"
                   onClick={handleSave}
+                  disabled={isSaving}
                   className="cursor-pointer bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
                 >
                   <Save className="h-4 w-4 mr-1" />
-                  Save
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCancel}
+                  disabled={isSaving}
                   className="cursor-pointer bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
@@ -104,6 +121,7 @@ export function PromptPanel({
               onChange={(e) => setEditedContent(e.target.value)}
               className="h-full font-mono text-sm resize-none"
               placeholder="Enter your system prompt..."
+              disabled={isSaving}
             />
           </div>
         ) : (
