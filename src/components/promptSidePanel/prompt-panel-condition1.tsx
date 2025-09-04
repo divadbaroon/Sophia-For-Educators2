@@ -11,6 +11,35 @@ import { cn } from "@/lib/utils"
 
 import { PromptPanelCondition1Props } from "./types"
 
+// Enhanced test state interface
+export interface TestState {
+  testId: string
+  testName: string
+  componentName: string
+  evaluationResults: Record<string, {
+    criteriaId: string
+    result: 'success' | 'failure' // Remove 'unknown' from here
+    rationale: string
+  }>
+  sourceLines: number[]
+  selectedProfileId: string
+  selectedScenarioId: string
+  scenarioOverview: string
+  studentProfilePrompt: string
+  conversation: Array<{
+    role: 'agent' | 'user'
+    message: string
+    timeInCallSecs?: number
+    multivoice_message?: any
+    toolCalls?: any[]
+    toolResults?: any[]
+    interrupted?: boolean
+  }>
+  finalResult: 'passed' | 'failed'
+  transcriptSummary?: string
+  callSuccessful?: string
+}
+
 interface TestResult {
   testId: string
   componentName: string
@@ -30,8 +59,12 @@ export function PromptPanelCondition1({
   isRunningTests = false,
   onPromptSave,
   isSaving = false,
-  testResults = [], // Add testResults prop
-}: PromptPanelCondition1Props & { testResults?: TestResult[] }) {
+  testResults = [],
+  enhancedTestResults = [] // Add enhanced test results prop
+}: PromptPanelCondition1Props & { 
+  testResults?: TestResult[]
+  enhancedTestResults?: TestState[]
+}) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(promptData.content.join("\n"))
   const [editedLines, setEditedLines] = useState<Set<number>>(new Set())
@@ -67,40 +100,25 @@ export function PromptPanelCondition1({
     setIsEditing(false)
   }
 
-  // Get line status based on test results
+  // Get line status based on enhanced test results
   const getLineStatus = (lineNumber: number, lineContent: string) => {
-    if (isRunningTests || !testResults || testResults.length === 0) {
+    if (isRunningTests || !enhancedTestResults || enhancedTestResults.length === 0) {
       return 'neutral'
     }
 
-    // Map test results to line highlighting logic
-    // This is a simplified mapping - you might want to make this more sophisticated
-    const failedTests = testResults.filter(test => !test.success)
-    const passedTests = testResults.filter(test => test.success)
-
-    // Example logic: highlight certain keywords/sections based on test results
-    const isPromptSection = lineContent.trim().toLowerCase().includes('you are') || 
-                           lineContent.trim().toLowerCase().includes('your role') ||
-                           lineContent.trim().toLowerCase().includes('teaching style')
-    
-    const isInstructionSection = lineContent.trim().toLowerCase().includes('instructions') ||
-                                lineContent.trim().toLowerCase().includes('guidelines') ||
-                                lineContent.trim().toLowerCase().includes('approach')
-
-    // If there are failed tests related to core pedagogical components
-    if (failedTests.length > 0 && isPromptSection) {
+    // Check if this line failed any tests
+    const failedTest = enhancedTestResults.find(test => 
+      test.finalResult === 'failed' && test.sourceLines.includes(lineNumber)
+    )
+    if (failedTest) {
       return 'error'
     }
 
-    // If there are failed tests related to instruction following
-    if (failedTests.some(test => test.componentName.includes('Step-by-Step') || 
-                                test.componentName.includes('Structured')) && 
-        isInstructionSection) {
-      return 'error'
-    }
-
-    // If line seems to be working well based on passed tests
-    if (passedTests.length > 0 && (isPromptSection || isInstructionSection)) {
+    // Check if this line passed tests
+    const passedTest = enhancedTestResults.find(test => 
+      test.finalResult === 'passed' && test.sourceLines.includes(lineNumber)
+    )
+    if (passedTest) {
       return 'success'
     }
 
@@ -116,14 +134,14 @@ export function PromptPanelCondition1({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-card-foreground">System Prompt</h2>
-            {testResults && testResults.length > 0 && !isRunningTests && (
+            {enhancedTestResults && enhancedTestResults.length > 0 && !isRunningTests && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-green-600">
-                  {testResults.filter(t => t.success).length} passed
+                  {enhancedTestResults.filter(t => t.finalResult === 'passed').length} passed
                 </span>
                 <span className="text-gray-400">•</span>
                 <span className="text-red-600">
-                  {testResults.filter(t => !t.success).length} failed
+                  {enhancedTestResults.filter(t => t.finalResult === 'failed').length} failed
                 </span>
               </div>
             )}
