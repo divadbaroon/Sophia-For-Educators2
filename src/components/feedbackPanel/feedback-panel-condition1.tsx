@@ -351,11 +351,6 @@ export function FeedbackPanelCondition1({
                           <Badge variant="outline" className="text-xs">
                             {turn.role === 'agent' ? 'Agent' : 'Student'}
                           </Badge>
-                          {turn.timeInCallSecs !== undefined && (
-                            <span className="text-xs text-muted-foreground">
-                              {Math.floor(turn.timeInCallSecs / 60)}:{(turn.timeInCallSecs % 60).toString().padStart(2, '0')}
-                            </span>
-                          )}
                         </div>
                         <p className="text-sm whitespace-pre-wrap">{turn.message}</p>
                       </div>
@@ -492,9 +487,6 @@ export function FeedbackPanelCondition1({
                 ) : selectedProblem.suggestedChange ? (
                   <>
                     <div className="mb-4">
-                      <p className="text-muted-foreground text-pretty">
-                        {selectedProblem.suggestedChange.explanation}
-                      </p>
                     </div>
 
                     <div className="space-y-4">
