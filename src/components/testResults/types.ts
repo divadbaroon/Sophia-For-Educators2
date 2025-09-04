@@ -10,7 +10,7 @@ export interface ValidationInterfaceProps {
   onUpdateConfig?: (name: string, prompt: string, firstMessage: string) => Promise<AgentInfo | null>
 }
 
-interface TestState {
+export interface TestState {
   testId: string
   testName: string
   componentName: string
@@ -36,6 +36,21 @@ interface TestState {
   finalResult: 'passed' | 'failed'
   transcriptSummary?: string
   callSuccessful?: string
+  remediationSuggestion?: {
+    analysis: {
+      pedagogicalGap: string
+      rootCause: string
+      targetedFix: string
+    }
+    suggestions: Array<{
+      changeType: 'replace' | 'add' | 'modify' | 'restructure'
+      affectedLines: number[]
+      originalContent: string
+      suggestedContent: string
+      rationale: string
+      pedagogicalPrinciple: string
+    }>
+  }
 }
 
 export interface ValidationInterfaceCondition1Props {
@@ -46,4 +61,5 @@ export interface ValidationInterfaceCondition1Props {
   isSaving?: boolean 
   onUpdateConfig?: (prompt: string, firstMessage: string) => Promise<AgentInfo | null>
   enhancedTestResults?: TestState[]
+  isGeneratingRemediation?: boolean 
 }
