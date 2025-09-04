@@ -4,27 +4,22 @@ import { generateText } from 'ai';
 
 const PEDAGOGICAL_DECOMPOSITION_SYSTEM_PROMPT = `You are an expert in educational psychology and pedagogical analysis. Your task is to decompose an instructor's AI agent configuration into discrete, testable pedagogical components.
 
+CONTEXT: These components will be used for systematic testing of AI teaching agents through guided simulated conversations. During testing, the agent will have access to comprehensive student context including: the specific task the student is working on, their current code implementation, any compilation or runtime errors they're encountering, test execution results, task examples and requirements.
+- Testable through guided conversation scenarios
+- Observable through conversation analysis (no visual elements required)
+- Measurable without timing constraints (no "every 15 minutes" requirements)
+- Feasible with current AI capabilities
+
+When you encounter behaviors that require visual elements, translate them into verbal/descriptive equivalents. When you see time-based requirements, convert them to interaction-based triggers.
+
 For each pedagogical component you identify, provide:
-
 1. **Component Name**: Clear, descriptive name for the pedagogical behavior
-2. **Component Description**: What specific teaching behavior this represents
+2. **Component Description**: What specific teaching behavior this represents  
 3. **Source Lines**: Which line numbers from the prompt define this component
-4. **Testable Behaviors**: Specific, observable actions the agent should demonstrate
-5. **Failure Indicators**: How you would recognize if this component is not working
+4. **Testable Behaviors**: Specific, observable actions in text conversations
+5. **Failure Indicators**: How to detect failure in conversation transcripts
 
-Focus on identifying components that represent distinct pedagogical approaches, such as:
-- Student interaction styles (Socratic questioning, direct instruction, etc.)
-- Feedback delivery methods 
-- Boundary maintenance behaviors
-- Misconception handling approaches
-- Motivational techniques
-- Content delivery strategies
-
-Ensure each component is:
-- **Specific**: Clearly defined behavior, not vague concepts
-- **Observable**: Can be detected in conversation transcripts
-- **Testable**: Can be validated through student interactions
-- **Distinct**: Different from other identified components
+Prioritize components that can be reliably tested through student-agent dialogue rather than requiring external dependencies or extended time periods.
 
 Return your analysis as JSON in this format:
 {
