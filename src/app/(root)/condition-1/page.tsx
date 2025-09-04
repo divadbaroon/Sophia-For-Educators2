@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-import { ValidationInterface } from "@/components/testResults/validation-interface-condition1"
+import { ValidationInterfaceCondition1 } from "@/components/testResults/validation-interface-condition1"
 import { AgentConfiguration } from "@/components/configuration/AgentConfiguration"
 
 import { useFetchAgentConfig, useUpdateAgentConfig } from "@/lib/hooks/configuration/useAgentConfiguration"
@@ -156,7 +156,7 @@ const ConditionOnePage = () => {
               {activeTab === "validation" && (
                 <div className="h-[600px]">
                   {testsRun || isRunningTests ? (
-                    <ValidationInterface 
+                    <ValidationInterfaceCondition1
                       isRunningTests={isRunningTests} 
                       currentStep={currentStep}
                       steps={steps}
