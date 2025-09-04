@@ -1,30 +1,25 @@
 "use client"
 
 import { useState } from "react"
-import { PromptPanel } from "@/components/promptSidePanel/prompt-panel-condition1"
-import { FeedbackPanel } from "@/components/feedbackPanel/feedback-panel-condition1"
-import { mockFeedbackData } from "@/lib/mock-data"
+
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { Card } from "@/components/ui/card"
-import { AgentInfo } from "@/components/configuration/types"
 
-interface ValidationInterfaceProps {
-  isRunningTests?: boolean
-  currentStep?: number
-  steps?: string[]
-  agentInfo?: AgentInfo | null 
-  isSaving?: boolean 
-  onUpdateConfig?: (prompt: string, firstMessage: string) => Promise<AgentInfo | null> 
-}
+import { FeedbackPanel } from "@/components/feedbackPanel/feedback-panel-condition1"
+import { PromptPanelCondition1 } from "@/components/promptSidePanel/prompt-panel-condition1"
 
-export function ValidationInterface({ 
+import { mockFeedbackData } from "@/lib/mock-data"
+
+import { ValidationInterfaceCondition1Props } from "./types"
+
+export function ValidationInterfaceCondition1({ 
   isRunningTests, 
   currentStep, 
   steps,
   agentInfo,
   isSaving = false,
   onUpdateConfig 
-}: ValidationInterfaceProps) {
+}: ValidationInterfaceCondition1Props) {
   const [selectedLine, setSelectedLine] = useState<number | null>(null)
 
   // Transform agent prompt to PromptData format
@@ -52,7 +47,7 @@ export function ValidationInterface({
         <ResizablePanel defaultSize={50} minSize={30}>
           <Card className="h-full min-h-[550px] border border-border">
             {agentInfo ? (
-              <PromptPanel
+              <PromptPanelCondition1
                 promptData={promptData}
                 selectedLine={selectedLine}
                 onLineSelect={setSelectedLine}

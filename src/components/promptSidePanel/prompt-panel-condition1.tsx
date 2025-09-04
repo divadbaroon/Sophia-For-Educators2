@@ -1,33 +1,24 @@
 "use client"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import { Edit3, Save, X } from "lucide-react"
+
 import { useState, useEffect } from "react"
 
-interface PromptData {
-  title: string
-  content: string[]
-  highlightedLines: number[]
-}
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
 
-interface PromptPanelProps {
-  promptData: PromptData
-  selectedLine: number | null
-  onLineSelect: (line: number | null) => void
-  isRunningTests?: boolean
-  onPromptSave?: (newPrompt: string) => Promise<void>
-  isSaving?: boolean
-}
+import { Edit3, Save, X } from "lucide-react"
 
-export function PromptPanel({
+import { cn } from "@/lib/utils"
+
+import { PromptDataCondition1, PromptPanelCondition1Props } from "./types"
+
+export function PromptPanelCondition1({
   promptData,
   selectedLine,
   onLineSelect,
   isRunningTests = false,
   onPromptSave,
   isSaving = false,
-}: PromptPanelProps) {
+}: PromptPanelCondition1Props) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(promptData.content.join("\n"))
   const [editedLines, setEditedLines] = useState<Set<number>>(new Set())
