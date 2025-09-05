@@ -456,7 +456,162 @@ export function FeedbackPanelCondition1({
             </Collapsible>
           )}
 
-         
+          <Collapsible open={expandedSections.has("suggested")} onOpenChange={() => toggleSection("suggested")}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-between p-3 h-auto font-semibold text-card-foreground rounded-lg border border-border/50 cursor-pointer transition-all text-foreground hover:text-foreground",
+                  expandedSections.has("suggested")
+                    ? "bg-muted/30 hover:bg-muted/30 border-border/30"
+                    : "hover:bg-muted/50 hover:border-border",
+                )}
+              >
+                Suggested Change
+                {expandedSections.has("suggested") ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
+                {selectedProblem.severity === "success" ? (
+                  <div className="flex items-center gap-2 p-4 bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 rounded-md">
+                    <CheckCircle className="w-5 h-5 text-[var(--color-success)] shrink-0" />
+                    <p className="text-muted-foreground text-pretty">
+                      No suggested changes needed - all test cases passed
+                    </p>
+                  </div>
+                ) : selectedProblem.suggestedChange ? (
+                  <>
+                    <div className="mb-4">
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Button
+                          variant={!showOriginal ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setShowOriginal(false)}
+                          className={cn(
+                            "cursor-pointer text-foreground hover:text-foreground",
+                            !showOriginal
+                              ? "text-white hover:text-white"
+                              : "hover:bg-gray-100 dark:hover:bg-gray-800",
+                          )}
+                        >
+                          Changes
+                        </Button>
+                        <Button
+                          variant={showOriginal ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setShowOriginal(true)}
+                          className={cn(
+                            "cursor-pointer text-foreground hover:text-foreground",
+                            showOriginal
+                              ? "text-white hover:text-white"
+                              : "hover:bg-gray-100 dark:hover:bg-gray-800",
+                          )}
+                        >
+                          Original
+                        </Button>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-sm text-card-foreground">
+                            {showOriginal ? "Original Content" : "Changes"}
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            {!isEditingChange && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleStartEditing}
+                                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground bg-transparent"
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </Button>
+                            )}
+                            {!isEditingChange ? (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleAcceptChange}
+                                  className="cursor-pointer hover:bg-[var(--color-success)]/10 hover:border-[var(--color-success)]/20 text-foreground hover:text-foreground bg-transparent"
+                                >
+                                  <Check className="w-4 h-4 text-[var(--color-success)] mr-2" />
+                                  Accept
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleRejectChange}
+                                  className="cursor-pointer hover:bg-destructive/10 hover:border-destructive/20 text-foreground hover:text-foreground bg-transparent"
+                                >
+                                  <X className="w-4 h-4 text-destructive mr-2" />
+                                  Reject
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleAcceptChange}
+                                  className="cursor-pointer hover:bg-[var(--color-success)]/10 hover:border-[var(--color-success)]/20 text-foreground hover:text-foreground bg-transparent"
+                                >
+                                  <Check className="w-4 h-4 text-[var(--color-success)] mr-2" />
+                                  Accept
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleCancelEditing}
+                                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-foreground hover:text-foreground bg-transparent"
+                                >
+                                  <X className="w-4 h-4 mr-2" />
+                                  Cancel
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="bg-card border border-border rounded-md p-3 max-h-64 overflow-auto">
+                          {showOriginal ? (
+                            <div className="font-mono text-sm py-1 whitespace-pre-wrap">
+                              {selectedProblem.suggestedChange.before}
+                            </div>
+                          ) : (
+                            createDiffView(
+                              selectedProblem.suggestedChange.before,
+                              selectedProblem.suggestedChange.after,
+                            )
+                          )}
+                        </div>
+                      </div>
+
+                      {isEditingChange && (
+                        <div>
+                          <h4 className="font-medium text-sm text-card-foreground mb-2">Edit Suggested Change</h4>
+                          <Textarea
+                            value={editedChange}
+                            onChange={(e) => setEditedChange(e.target.value)}
+                            className="min-h-32 font-mono text-sm"
+                            placeholder="Edit the suggested change..."
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
     )
