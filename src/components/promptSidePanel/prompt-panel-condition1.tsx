@@ -60,7 +60,8 @@ export function PromptPanelCondition1({
   onPromptSave,
   isSaving = false,
   testResults = [],
-  enhancedTestResults = [] // Add enhanced test results prop
+  enhancedTestResults = [],
+  onAcceptChange
 }: PromptPanelCondition1Props & { 
   testResults?: TestResult[]
   enhancedTestResults?: TestState[]
