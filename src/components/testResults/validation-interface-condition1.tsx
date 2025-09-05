@@ -187,6 +187,59 @@ export function ValidationInterfaceCondition1({
     await onUpdateConfig(newPrompt, agentInfo.first_message)
   }
 
+  const handleAcceptChange = async (change: {
+    testId: string
+    lineNumbers: number[]
+    before: string
+    after: string
+  }) => {
+    if (!agentInfo?.prompt || !onUpdateConfig) return
+    
+    const promptLines = agentInfo.prompt.split('\n')
+    
+    // Replace the content at the specified lines
+    change.lineNumbers.forEach(lineNum => {
+      if (lineNum > 0 && lineNum <= promptLines.length) {
+        // Replace the line (lineNum is 1-based, array is 0-based)
+        promptLines[lineNum - 1] = change.after
+      }
+    })
+    
+    const newPrompt = promptLines.join('\n')
+    
+    // Update the prompt
+    await onUpdateConfig(newPrompt, agentInfo.first_message)
+    
+    // Update local state to reflect the change
+    setPromptData(prev => ({
+      ...prev,
+      content: promptLines,
+      // Remove highlighting from fixed lines
+      highlightedLines: prev.highlightedLines.filter(
+        line => !change.lineNumbers.includes(line)
+      )
+    }))
+
+    // Temporarily highlight the changed lines in green
+    setPromptData(prev => ({
+      ...prev,
+      content: newPrompt.split('\n'),
+      highlightedLines: prev.highlightedLines.filter(
+        line => !change.lineNumbers.includes(line)
+      ),
+      changedLines: change.lineNumbers // Track recently changed lines
+    }))
+    
+    // Remove the green highlight after 3 seconds
+    setTimeout(() => {
+      setPromptData(prev => ({
+        ...prev,
+        changedLines: []
+      }))
+    }, 3000)
+  }
+
+
   return (
     <div className="h-full min-h-[600px] p-2 gap-6 flex -mt-2">
       <ResizablePanelGroup direction="horizontal" className="h-full bg-background">
@@ -201,7 +254,8 @@ export function ValidationInterfaceCondition1({
                 onPromptSave={handlePromptSave}
                 isSaving={isSaving}
                 testResults={testResults}
-                enhancedTestResults={enhancedTestResults} // Pass enhanced results
+                enhancedTestResults={enhancedTestResults}
+                onAcceptChange={handleAcceptChange} 
               />
             ) : (
               <div className="flex items-center justify-center h-full">
@@ -223,6 +277,7 @@ export function ValidationInterfaceCondition1({
               currentStep={currentStep}
               steps={steps}
               promptData={promptData} 
+              onAcceptChange={handleAcceptChange}
             />
           </Card>
         </ResizablePanel>
