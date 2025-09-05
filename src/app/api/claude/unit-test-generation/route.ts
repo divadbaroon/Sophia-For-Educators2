@@ -2,56 +2,68 @@ import { NextRequest, NextResponse } from 'next/server';
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 
-const UNIT_TEST_GENERATION_SYSTEM_PROMPT = `You are an expert in educational testing and pedagogical evaluation. Your task is to generate comprehensive test scenarios for pedagogical components using authentic student profiles and realistic programming scenarios.
+const UNIT_TEST_GENERATION_SYSTEM_PROMPT = `You are an expert in educational testing and pedagogical evaluation. Your task is to generate comprehensive test scenarios that evaluate contextually appropriate pedagogical responses.
 
-CRITICAL REQUIREMENT: You must generate EXACTLY 3-5 test cases for each pedagogical component provided. This is non-negotiable for comprehensive validation coverage.
+CRITICAL REQUIREMENT: You must generate EXACTLY 4-6 test cases for each pedagogical component provided, including AT LEAST 2 edge cases that are likely to fail.
+
+EDGE CASE REQUIREMENTS:
+- Include scenarios where the agent is likely to fail or struggle
+- Test boundary conditions and extreme situations
+- Include cases where students are hostile, uncooperative, or manipulative
+- Test scenarios with conflicting pedagogical priorities
+- Include time-pressured situations where ideal pedagogy is impractical
+- Test cases where students ask for direct answers inappropriately
+- Include scenarios where students try to game the system
+
+CONTEXT-AWARE EVALUATION PHILOSOPHY:
+- Good teaching adapts to student needs, context, and learning situations
+- Rigid application of pedagogical techniques regardless of context is poor teaching
+- Evaluation criteria must consider what is pedagogically appropriate for the specific situation
+- Focus on whether the agent's response serves the student's learning needs in that moment
+
+EVALUATION CRITERIA PRINCIPLES:
+- Judge whether the agent's response is contextually appropriate for the student's needs
+- Consider the student's emotional state, time pressure, and specific questions
+- Evaluate pedagogical quality within the context of the conversation
+- Don't penalize agents for not using techniques that would be inappropriate for the situation
+- Focus on adaptive teaching behaviors rather than rigid technique application
 
 For each pedagogical component provided, you will:
-1. Select 3-5 different student profile and scenario combinations that would meaningfully test the component
-2. Generate conversation starters that trigger the specific pedagogical behavior
-3. Create evaluation criteria to assess whether the component functions correctly
-
-SELECTION CRITERIA:
-- Choose student profiles whose characteristics would naturally encounter the pedagogical behavior
-- Select scenarios that provide appropriate context for the component to be demonstrated  
-- Ensure diverse coverage across different student types and error contexts
-- Avoid redundant combinations that test the same pedagogical interaction
-- Each test case must test a different aspect or situation for the component
+1. Select 4-6 different student profile and scenario combinations that meaningfully test the component
+2. Generate conversation starters that create realistic pedagogical situations
+3. Create contextually aware evaluation criteria that judge appropriateness of the agent's response
 
 CONVERSATION STARTERS:
-- Must naturally trigger the pedagogical component being tested
-- Should reflect the selected student profile's communication style and knowledge level
-- Include reference to the scenario's code/error context when relevant
-- Sound like authentic student questions or statements
+- Must reflect authentic student interactions and needs
+- Should vary in context (urgent help, conceptual confusion, general questions)
+- Include different emotional states and learning situations
+- Present scenarios where the component should naturally be demonstrated
 
-EVALUATION CRITERIA:
-- Specific to the pedagogical component being tested
-- Observable through conversation analysis
-- Measurable as success/failure with clear rationale
-- Focus on pedagogical appropriateness, not just technical correctness
+EVALUATION CRITERIA REQUIREMENTS:
+- Must consider the context of the student's request and emotional state
+- Should evaluate whether the agent's response appropriately serves the student's needs
+- Focus on pedagogical appropriateness rather than technique checklist compliance
+- Criteria should recognize that different situations call for different teaching approaches
+- Judge adaptive teaching behavior that responds to context
 
-AT LEAST 3 of these must be edge cases where the AI will likely struggle.
+EXAMPLES OF CONTEXTUALLY APPROPRIATE CRITERIA:
 
-EDGE CASE CATEGORIES TO PRIORITIZE:
+For a stressed student asking urgent implementation help:
+✅ "Agent provides focused guidance appropriate to the student's time pressure while maintaining educational value"
+✅ "Agent balances efficiency with learning by explaining key concepts without overwhelming detail"
 
-1. **Ethical Dilemmas**: Student asks for help that borders on academic dishonesty
-   - "Can you just check if my answer is right?" (when they haven't attempted it)
-   - "I'll fail if you don't help me right now"
+For a student asking basic formatting questions:
+✅ "Agent provides clear, accurate information appropriate to the student's specific questions"
+✅ "Agent offers additional related help when contextually appropriate"
 
-2. **Emotional Manipulation**: Students using emotional pressure
-   - "You're the worst tutor ever, everyone else just helps"
-   - "I have anxiety and you're making it worse by not giving me answers"
+For a confused student with conceptual gaps:
+✅ "Agent identifies and addresses the student's specific misconceptions"
+✅ "Agent checks understanding through questions when appropriate to the conversation flow"
 
-3. **Time Pressure vs. Learning**: Genuine urgency conflicts with pedagogy
-   - 2 minutes before deadline, needs conceptual understanding
-   - "I have another exam in 10 minutes, just tell me what to memorize"
-
-4. **Hostile Resistance**: Students who actively resist learning
-   - "This is stupid and pointless"
-   - "Just fix my code, I don't care how it works"
-
-5. **Boundary Testing**: Students pushing limits
-   - Trying to get around learning with clever rephrasing
+EXAMPLES OF POOR CONTEXT-BLIND CRITERIA:
+❌ "Agent asks verification questions" (inappropriate if student asked straightforward factual questions)
+❌ "Agent provides industry examples" (inappropriate if student needs urgent implementation help)
+❌ "Agent uses guided discovery" (inappropriate for basic syntax questions)
 
 Return your analysis as JSON in this format:
 {
@@ -66,7 +78,7 @@ Return your analysis as JSON in this format:
         {
           "id": "criteria_identifier",
           "name": "Human Readable Name",
-          "conversationGoalPrompt": "The agent demonstrated the expected pedagogical behavior",
+          "conversationGoalPrompt": "The agent responded appropriately to the student's needs and context, demonstrating good pedagogical judgment for this specific situation",
           "useKnowledgeBase": false
         }
       ]
@@ -89,25 +101,59 @@ export async function POST(req: NextRequest) {
     }
 
     console.log(`📨 Generating tests for ${pedagogicalComponents.length} pedagogical components`);
+    
+    // Debug: Log what we received
+    console.log('🔍 Debug - Received data types:');
+    console.log('pedagogicalComponents:', Array.isArray(pedagogicalComponents), pedagogicalComponents?.length);
+    console.log('studentProfiles:', Array.isArray(studentProfiles), typeof studentProfiles);
+    console.log('scenarioTemplates:', Array.isArray(scenarioTemplates), scenarioTemplates?.length);
+    
+    // Ensure all required data is arrays
+    if (!Array.isArray(studentProfiles)) {
+      console.error('❌ studentProfiles is not an array:', studentProfiles);
+      return NextResponse.json(
+        { error: 'Student profiles must be an array' },
+        { status: 400 }
+      );
+    }
+    
+    if (!Array.isArray(scenarioTemplates)) {
+      console.error('❌ scenarioTemplates is not an array:', scenarioTemplates);
+      return NextResponse.json(
+        { error: 'Scenario templates must be an array' },
+        { status: 400 }
+      );
+    }
 
     // Build the user prompt with all available data
     const userPrompt = `Generate comprehensive test scenarios for the following pedagogical components. 
 IMPORTANT: Generate 3-5 distinct test cases for EACH component listed below.
 
+CRITICAL: Create contextually appropriate evaluation criteria. Consider what would be pedagogically sound given the student's specific situation, emotional state, and type of question.
+
 === PEDAGOGICAL COMPONENTS ===
 ${pedagogicalComponents.map((comp: any, idx: any) => 
-  `${idx + 1}. ${comp.name}: ${comp.description}`
+  `${idx + 1}. ${comp.name}: ${comp.description}
+     Testable Behaviors: ${comp.testableBehaviors?.join(', ') || 'Not specified'}
+     Failure Indicators: ${comp.failureIndicators?.join(', ') || 'Not specified'}`
 ).join('\n')}
 
 === AVAILABLE STUDENT PROFILES ===
 ${studentProfiles.map((profile: any, idx: any) => 
-  `${idx + 1}. ${profile.id}: ${profile.prompt}...`
+  `${idx + 1}. ${profile.id}: ${profile.prompt.substring(0, 150)}...`
 ).join('\n')}
 
 === AVAILABLE SCENARIOS ===
 ${scenarioTemplates.map((scenario: any, idx: any) => 
   `${idx + 1}. ${scenario.scenarioId}: ${scenario.overview}`
 ).join('\n')}
+
+CONTEXT-AWARE EVALUATION RULES:
+- Judge whether the agent's response appropriately serves the student's needs in their specific situation
+- Consider the student's emotional state, time constraints, and type of question
+- Don't penalize agents for not using techniques inappropriate to the context
+- Evaluate adaptive teaching that responds to the student's actual needs
+- Focus on pedagogical appropriateness rather than rigid technique compliance
 
 REMEMBER: You must generate 3-5 test cases per pedagogical component to ensure comprehensive validation coverage. Total expected test cases: ${pedagogicalComponents.length * 3}-${pedagogicalComponents.length * 5}`;
     
@@ -129,6 +175,15 @@ REMEMBER: You must generate 3-5 test cases per pedagogical component to ensure c
     const response = JSON.parse(jsonText);
 
     console.log(`🎯 Generated ${response.testCases?.length || 0} test cases`);
+    console.log('📋 Test case breakdown:');
+    
+    // Log breakdown by component for debugging
+    const componentBreakdown = response.testCases?.reduce((acc: any, test: any) => {
+      acc[test.componentName] = (acc[test.componentName] || 0) + 1;
+      return acc;
+    }, {});
+    
+    console.log('Component test counts:', componentBreakdown);
 
     return NextResponse.json({
       testCases: response.testCases,
@@ -136,7 +191,8 @@ REMEMBER: You must generate 3-5 test cases per pedagogical component to ensure c
         componentsProcessed: pedagogicalComponents.length,
         testCasesGenerated: response.testCases?.length || 0,
         profilesAvailable: studentProfiles.length,
-        scenariosAvailable: scenarioTemplates.length
+        scenariosAvailable: scenarioTemplates.length,
+        componentBreakdown
       }
     });
 
