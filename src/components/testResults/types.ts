@@ -37,19 +37,9 @@ export interface TestState {
   transcriptSummary?: string
   callSuccessful?: string
   remediationSuggestion?: {
-    analysis: {
-      pedagogicalGap: string
-      rootCause: string
-      targetedFix: string
-    }
-    suggestions: Array<{
-      changeType: 'replace' | 'add' | 'modify' | 'restructure'
-      affectedLines: number[]
-      originalContent: string
-      suggestedContent: string
-      rationale: string
-      pedagogicalPrinciple: string
-    }>
+    before: string
+    after: string
+    explanation: string
   }
 }
 
