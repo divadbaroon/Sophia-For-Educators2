@@ -51,19 +51,9 @@ export interface TestState {
   transcriptSummary?: string
   callSuccessful?: string
   remediationSuggestion?: {
-    analysis: {
-      pedagogicalGap: string
-      rootCause: string
-      targetedFix: string
-    }
-    suggestions: Array<{
-      changeType: 'replace' | 'add' | 'modify' | 'restructure'
-      affectedLines: number[]
-      originalContent: string
-      suggestedContent: string
-      rationale: string
-      pedagogicalPrinciple: string
-    }>
+    before: string
+    after: string
+    explanation: string
   }
 }
 
@@ -141,10 +131,22 @@ const ConditionOnePage = () => {
   }
 
   // Generate remediation suggestions for failed tests
-  const generateRemediationForResults = async (testResults: TestState[]): Promise<TestState[]> => {
-    await new Promise(resolve => setTimeout(resolve, 2000))
+  const generateRemediationForResults = async (
+    testResults: TestState[], 
+    freshPedagogicalComponents?: PedagogicalComponent[]
+  ): Promise<TestState[]> => {
     
-    if (!testResults.length || !pedagogicalComponents) {
+    console.log(`🔍 DEBUGGING REMEDIATION:`)
+    console.log(`  - testResults.length: ${testResults.length}`)
+    console.log(`  - freshPedagogicalComponents exists: ${!!freshPedagogicalComponents}`)
+    console.log(`  - pedagogicalComponents state exists: ${!!pedagogicalComponents}`)
+    console.log(`  - agentInfo?.prompt exists: ${!!agentInfo?.prompt}`)
+
+    // Use fresh data if provided, otherwise fall back to state
+    const componentsToUse = freshPedagogicalComponents || pedagogicalComponents
+
+    if (!testResults.length || !componentsToUse) {
+      console.log(`❌ EARLY EXIT: ${!testResults.length ? 'no test results' : 'no pedagogical components'}`)
       return testResults
     }
     
@@ -153,10 +155,10 @@ const ConditionOnePage = () => {
     const failedTests = testResults.filter(test => test.finalResult === 'failed')
 
     console.log(`🔍 Total tests: ${testResults.length}`)
-  console.log(`🔍 Failed tests: ${failedTests.length}`)
-  failedTests.forEach(test => {
-    console.log(`  - ${test.testId}: ${test.componentName}`)
-  })
+    console.log(`🔍 Failed tests: ${failedTests.length}`)
+    failedTests.forEach(test => {
+      console.log(`  - ${test.testId}: ${test.componentName}`)
+    })
       
     if (failedTests.length === 0) {
       console.log("No failed tests to remediate")
@@ -168,7 +170,7 @@ const ConditionOnePage = () => {
     
     const remediationPromises = failedTests.map(async (failedTest): Promise<{ testId: string; remediation: any } | null> => {
       try {
-        const component = pedagogicalComponents.find(comp => comp.name === failedTest.componentName)
+        const component = componentsToUse.find(comp => comp.name === failedTest.componentName)
         if (!component) {
           console.warn(`Component not found for test ${failedTest.testId}`)
           return null
@@ -447,8 +449,11 @@ const ConditionOnePage = () => {
       setCurrentStep(3)
       console.log("Analyzing results and generating remediation...")
       
-      // Generate remediation and get the updated results
-      const resultsWithRemediation = await generateRemediationForResults(finalResults)
+      // Generate remediation and get the updated results - now with fresh pedagogical components
+      const resultsWithRemediation = await generateRemediationForResults(
+        finalResults, 
+        decompositionData?.pedagogicalComponents
+      )
       
       // Set the final enhanced results with remediation
       setEnhancedTestResults(resultsWithRemediation)
