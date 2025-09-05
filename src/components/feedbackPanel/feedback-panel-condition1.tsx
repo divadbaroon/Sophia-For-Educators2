@@ -45,6 +45,7 @@ export function FeedbackPanelCondition1({
   currentStep,
   steps,
   promptData, 
+  onAcceptChange
 }: FeedbackPanelPropsCondition1 ) {
   const [selectedProblem, setSelectedProblem] = useState<FeedbackItem | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]))
@@ -112,16 +113,18 @@ export function FeedbackPanelCondition1({
   }
 
   const handleAcceptChange = () => {
-    console.log("[v0] Accepting suggested change:", editedChange)
-    
-    // Log the current prompt data for context
-    if (promptData) {
-      console.log("Current prompt data:", promptData)
-      console.log("Selected line context:", selectedLine ? promptData.content[selectedLine - 1] : "No line selected")
-    }
-    
-    setIsEditingChange(false)
-  }
+  if (!selectedProblem?.suggestedChange || !onAcceptChange) return
+  
+  onAcceptChange({
+    testId: selectedProblem.id,
+    lineNumbers: selectedProblem.lineNumbers || [],
+    before: selectedProblem.suggestedChange.before,
+    after: isEditingChange ? editedChange : selectedProblem.suggestedChange.after,
+  })
+  
+  setIsEditingChange(false)
+  setSelectedProblem(null)
+}
 
   const handleRejectChange = () => {
     console.log("[v0] Rejecting suggested change")
