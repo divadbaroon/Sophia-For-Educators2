@@ -48,7 +48,7 @@ export function FeedbackPanelCondition1({
   onAcceptChange
 }: FeedbackPanelPropsCondition1 ) {
   const [selectedProblem, setSelectedProblem] = useState<FeedbackItem | null>(null)
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]))
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["suggested"]))
   const [isEditingChange, setIsEditingChange] = useState(false)
   const [editedChange, setEditedChange] = useState("")
   const [showOriginal, setShowOriginal] = useState(false)
