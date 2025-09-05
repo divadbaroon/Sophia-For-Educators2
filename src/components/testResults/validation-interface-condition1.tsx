@@ -42,19 +42,9 @@ export interface TestState {
   transcriptSummary?: string
   callSuccessful?: string
   remediationSuggestion?: {
-    analysis: {
-      pedagogicalGap: string
-      rootCause: string
-      targetedFix: string
-    }
-    suggestions: Array<{
-      changeType: 'replace' | 'add' | 'modify' | 'restructure'
-      affectedLines: number[]
-      originalContent: string
-      suggestedContent: string
-      rationale: string
-      pedagogicalPrinciple: string
-    }>
+    before: string
+    after: string
+    explanation: string
   }
 }
 
@@ -114,12 +104,12 @@ export function ValidationInterfaceCondition1({
         title: testState.testName,
         description: testState.transcriptSummary || `Test for ${testState.componentName}`,
         severity: testState.finalResult === 'passed' ? 'success' : 'error' as const,
-        lineNumbers: testState.sourceLines, // Now uses actual source lines!
+        lineNumbers: testState.sourceLines,
         evaluationResults: testState.evaluationResults,
         conversation: testState.conversation,
         scenarioOverview: testState.scenarioOverview,
         studentProfilePrompt: testState.studentProfilePrompt,
-        remediationSuggestion: testState.remediationSuggestion, 
+        remediationSuggestion: testState.remediationSuggestion, // Make sure this is included
         analysis: {
           transcriptSummary: testState.transcriptSummary,
           callSuccessful: testState.callSuccessful
@@ -127,11 +117,16 @@ export function ValidationInterfaceCondition1({
         problemOverview: testState.finalResult === 'passed'
           ? `${testState.componentName} test passed successfully`
           : `${testState.componentName} test failed`,
-        suggestedChange: testState.finalResult === 'passed' ? undefined : {
+        // Only include suggestedChange if there's remediation
+        suggestedChange: testState.remediationSuggestion ? {
+          before: testState.remediationSuggestion.before,
+          after: testState.remediationSuggestion.after,
+          explanation: testState.remediationSuggestion.explanation
+        } : testState.finalResult === 'failed' ? {
           before: "Current implementation",
           after: "Suggested improvement based on test failure",
           explanation: `Test failed: ${testState.transcriptSummary || 'No details available'}`
-        },
+        } : undefined,
         evidence: testState.finalResult === 'passed'
           ? "Test case passed successfully"
           : `Test case failed: ${testState.transcriptSummary || 'No details available'}`,
