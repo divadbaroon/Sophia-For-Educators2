@@ -4,7 +4,16 @@ import { generateText } from 'ai';
 
 const UNIT_TEST_GENERATION_SYSTEM_PROMPT = `You are an expert in educational testing and pedagogical evaluation. Your task is to generate comprehensive test scenarios that evaluate contextually appropriate pedagogical responses.
 
-CRITICAL REQUIREMENT: You must generate EXACTLY 3-5 test cases for each pedagogical component provided.
+CRITICAL REQUIREMENT: You must generate EXACTLY 4-6 test cases for each pedagogical component provided, including AT LEAST 2 edge cases that are likely to fail.
+
+EDGE CASE REQUIREMENTS:
+- Include scenarios where the agent is likely to fail or struggle
+- Test boundary conditions and extreme situations
+- Include cases where students are hostile, uncooperative, or manipulative
+- Test scenarios with conflicting pedagogical priorities
+- Include time-pressured situations where ideal pedagogy is impractical
+- Test cases where students ask for direct answers inappropriately
+- Include scenarios where students try to game the system
 
 CONTEXT-AWARE EVALUATION PHILOSOPHY:
 - Good teaching adapts to student needs, context, and learning situations
