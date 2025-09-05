@@ -21,4 +21,10 @@ export interface PromptPanelCondition1Props {
   isRunningTests?: boolean
   onPromptSave?: (newPrompt: string) => Promise<void>
   isSaving?: boolean
+  onAcceptChange?: (change: {
+    testId: string
+    lineNumbers: number[]
+    before: string
+    after: string
+  }) => void
 }
