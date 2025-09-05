@@ -276,4 +276,10 @@ export interface FeedbackPanelPropsCondition1 {
   currentStep?: number
   steps?: string[]
   promptData: PromptData
+  onAcceptChange?: (change: {
+    testId: string
+    lineNumbers: number[]
+    before: string
+    after: string
+  }) => void
 }
