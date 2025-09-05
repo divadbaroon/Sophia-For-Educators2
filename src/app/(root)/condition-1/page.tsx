@@ -220,7 +220,6 @@ const ConditionOnePage = () => {
     
     return updatedResults
   }
-
   const handleRunTests = async (rerunFailedOnly: boolean = false) => {
     setActiveTab("validation")
     setIsRunningTests(true)
@@ -394,8 +393,40 @@ const ConditionOnePage = () => {
       console.log("Simulation results:", simulationData.summary)
       console.log("Detailed results:", simulationData.results)
 
-      // Step 4: Create enhanced test results
-      const enhancedResults: TestState[] = simulationData.results.map((result: any) => {
+      // AUTO-RETRY LOGIC: Check if all tests passed and run confirmation
+      const allTestsPassed = !rerunFailedOnly && simulationData.results.every((result: any) => {
+        const evaluationResults = result.evaluationResults || result.analysis?.evaluationCriteriaResults || {}
+        return Object.values(evaluationResults).every((res: any) => res.result === 'success')
+      })
+
+      let finalSimulationData = simulationData
+
+      if (allTestsPassed) {
+        console.log('✅ All tests passed - rerunning all test cases...')
+        
+        // Run confirmation simulation automatically
+        const confirmationResponse = await fetch('/api/elevenlabs/simulate-conversations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agentId: agentInfo?.agent_id,
+            preparedTests: preparedTestData
+          })
+        })
+
+        if (confirmationResponse.ok) {
+          const confirmationData = await confirmationResponse.json()
+          console.log('🔄 Confirmation simulation completed')
+          finalSimulationData = confirmationData // Use confirmation results
+        } else {
+          console.warn('⚠️ Confirmation simulation failed, using initial results')
+        }
+      }
+
+      // Step 4: Create enhanced test results (using final simulation data)
+      const enhancedResults: TestState[] = finalSimulationData.results.map((result: any) => {
         const evaluationResults = result.evaluationResults || result.analysis?.evaluationCriteriaResults || {}
         const finalResult = Object.values(evaluationResults).every((res: any) => res.result === 'success') ? 'passed' : 'failed'
         
@@ -443,7 +474,7 @@ const ConditionOnePage = () => {
 
       console.log("ENHANCED TEST RESULTS:", rerunFailedOnly ? 'Updated with rerun results' : finalResults)
 
-      setTestResults(simulationData.results) // Keep original for backward compatibility
+      setTestResults(finalSimulationData.results) // Keep original for backward compatibility
       
       // Step 4: Remediating failures
       setCurrentStep(3)
